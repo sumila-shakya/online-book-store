@@ -1,4 +1,6 @@
 import express from 'express'
+import { ApiResponse } from './utils/apiResponse'
+import { errorHandler } from './middlewares/error.middleware'
 import cookieParser from 'cookie-parser'
 import { db } from './config/mysql.config'
 
@@ -12,6 +14,11 @@ app.use(cookieParser())
 // HEALTH STATUS CHECKUP
 app.get('/api/health', async (req, res, next) => {
     try {
+        /*
+        //simulating the error to test the global error middleware
+        throw new Error("Simulated Crash")
+        */
+
         //testing the mysql connection
         await db.execute('SELECT 1')
 
@@ -24,11 +31,14 @@ app.get('/api/health', async (req, res, next) => {
 
         res
         .status(200)
-        .json(healthData)
+        .json(new ApiResponse(200, healthData, "Server is running !!"))
 
     } catch(error) {
         next(error)
     }
 })
+
+// GLOBAL ERROR MIDDLEWARE
+app.use(errorHandler)
 
 export { app }
