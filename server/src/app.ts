@@ -3,6 +3,7 @@ import { ApiResponse } from './utils/apiResponse'
 import { errorHandler } from './middlewares/error.middleware'
 import cookieParser from 'cookie-parser'
 import { db } from './config/mysql.config'
+import authRouter from './routes/auth.route'
 
 const app = express()
 
@@ -10,6 +11,9 @@ const app = express()
 app.use(express.json())
 app.use(express.urlencoded({extended: true}))
 app.use(cookieParser())
+
+// ROUTES
+app.use('/api/auth', authRouter)
 
 // HEALTH STATUS CHECKUP
 app.get('/api/health', async (req, res, next) => {

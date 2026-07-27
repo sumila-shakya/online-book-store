@@ -1,0 +1,1 @@
+export const AUTH_PROVIDER = ['local', 'google'] as const
