@@ -1,6 +1,6 @@
 import { db } from "../config/mysql.config";
-import { users, User, NewUser } from "../models/mysql.model";
-import { eq } from "drizzle-orm";
+import { users, refreshTokens, User, NewUser, NewToken } from "../models/mysql.model";
+import { eq, and } from "drizzle-orm";
 import { ApiError } from "../utils/apiError";
 import { registrationType, loginType } from "../utils/validator";
 import { jwtUtils } from "../utils/jwt";
@@ -40,12 +40,31 @@ export const authServices = {
 
         // generate the new access and refresh tokens
         const accessToken: string = jwtUtils.generateAccessToken(payload)
+        const refreshToken: string = jwtUtils.generateRefreshToken(payload)
+        const expiryDate: Date = jwtUtils.getExpiryDate()
+
+        // delete the old token
+        await db
+        .delete(refreshTokens)
+        .where(eq(refreshTokens.userId, result.insertId))
+
+        const newToken: NewToken = {
+            userId: result.insertId,
+            token: refreshToken,
+            expiresAt: expiryDate
+        }
+
+        // insert the new token
+        await db
+        .insert(refreshTokens)
+        .values(newToken)
 
         return {
             userId: result.insertId,
             email: data.email,
             name: data.name,
-            accessToken: accessToken
+            accessToken: accessToken,
+            refreshToken: refreshToken
         }
 
     },
@@ -81,12 +100,95 @@ export const authServices = {
 
         // generate the new access and refresh tokens
         const accessToken: string = jwtUtils.generateAccessToken(payload)
+        const refreshToken: string = jwtUtils.generateRefreshToken(payload)
+        const expiryDate: Date = jwtUtils.getExpiryDate()
+
+        // delete the old token
+        await db
+        .delete(refreshTokens)
+        .where(eq(refreshTokens.userId, existingUser.userId))
+
+        const newToken: NewToken = {
+            userId: existingUser.userId,
+            token: refreshToken,
+            expiresAt: expiryDate
+        }
+
+        // insert the new token
+        await db
+        .insert(refreshTokens)
+        .values(newToken)
 
         return {
             userId: existingUser.userId,
             email: existingUser.email,
             name: existingUser.name,
-            accessToken
+            accessToken,
+            refreshToken
         }
-    }
+    },
+
+    async logout(userId: number) {
+        // delete the refresh token from the database
+        await db
+        .delete(refreshTokens)
+        .where(eq(refreshTokens.userId, userId))
+    },
+
+    async refreshToken(token: string, userId: number) {
+        //check for the existing token record
+        const [tokenRecord] = await db
+        .select()
+        .from(refreshTokens)
+        .where(and(
+            eq(refreshTokens.userId, userId),
+            eq(refreshTokens.token, token)
+        ))
+
+        // throw error if token record doesn't exists
+        if(!tokenRecord) {
+            throw new ApiError(401, "Access Denied")
+        }
+
+        // throw error if token expired
+        if(tokenRecord.expiresAt < new Date()) {
+            // delete the expired token
+            await db
+            .delete(refreshTokens)
+            .where(eq(refreshTokens.tokenId, tokenRecord.tokenId))
+
+            throw new ApiError(401, "Token expired! Please login again")
+        }
+
+        const payload: Payload = {
+            userId: userId
+        }
+
+        // generate the new access and refresh tokens
+        const accessToken: string = jwtUtils.generateAccessToken(payload)
+        const refreshToken: string = jwtUtils.generateRefreshToken(payload)
+        const expiryDate: Date = jwtUtils.getExpiryDate()
+
+        // delete the old token (token rotation)
+        await db
+        .delete(refreshTokens)
+        .where(eq(refreshTokens.tokenId, tokenRecord.tokenId))
+
+        const newToken: NewToken = {
+            userId: userId,
+            token: refreshToken,
+            expiresAt: expiryDate
+        }
+
+        // insert the new token
+        await db
+        .insert(refreshTokens)
+        .values(newToken)
+        
+        // return new refresh token and access token
+        return {
+            accessToken,
+            refreshToken
+        }
+    },
 }

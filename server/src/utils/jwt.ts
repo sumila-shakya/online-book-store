@@ -4,13 +4,25 @@ import { Payload } from '../@types/interface'
 import { payloadSchema } from './validator'
 
 const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET!
+const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET!
 
 export const jwtUtils = {
     generateAccessToken(payload: Payload): string {
         if(!ACCESS_TOKEN_SECRET) {
             console.error("Access token not defined!")
         }
-        return jwt.sign(payload, ACCESS_TOKEN_SECRET, { expiresIn: '7d' })
+        return jwt.sign(payload, ACCESS_TOKEN_SECRET, { expiresIn: '30m' })
+    },
+
+    generateRefreshToken(payload: Payload): string {
+        if(!REFRESH_TOKEN_SECRET) {
+            console.error("Refresh token not defined!")
+        }
+        return jwt.sign(payload, REFRESH_TOKEN_SECRET, { expiresIn: '7d' })
+    },
+
+    getExpiryDate(): Date {
+        return new Date(Date.now() + 7*24*60*60*1000)
     },
 
     verifyAccessToken(accessToken: string): Payload {
@@ -25,4 +37,17 @@ export const jwtUtils = {
             throw new ApiError(401, "Invalid token!!")
         }
     },
+
+    verifyRefreshToken(refreshToken: string): Payload {
+        try {
+            const decoded = jwt.verify(refreshToken, REFRESH_TOKEN_SECRET)
+            const user: Payload = payloadSchema.parse(decoded)
+            return user
+        } catch(error) {
+            if(error instanceof jwt.TokenExpiredError) {
+                throw new ApiError(401, "Token expired!!")
+            }
+            throw new ApiError(401, "Invalid token!!")
+        }
+    }
 }
