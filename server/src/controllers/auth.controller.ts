@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { ApiError } from "../utils/apiError";
 import { ApiResponse } from "../utils/apiResponse";
 import { authServices } from "../services/auth.service";
-import { registrationSchema, loginSchema, registrationType, loginType } from "../utils/validator";
+import { registrationSchema, loginSchema, googleCodeSchema, registrationType, loginType, googleCodeType } from "../utils/validator";
 import { COOKIES_OPTIONS } from "../utils/constants";
 import { jwtUtils } from "../utils/jwt";
 import { Payload } from "../@types/interface";
@@ -99,6 +99,27 @@ export const authController = {
             res.status(200)
             .cookie('refreshToken', refreshToken, COOKIES_OPTIONS)
             .json(new ApiResponse(200, {accessToken}))
+        } catch(error) {
+            next(error)
+        }
+    },
+
+    async signInWithGoogle(req: Request, res: Response, next: NextFunction) {
+        try {
+            // validate the user data
+            const validatedData: googleCodeType = googleCodeSchema.parse(req.body)
+
+            // get the user data
+            const user = await authServices.signInWithGoogle(validatedData.authenticationCode)
+
+            // seperate the refresh token from the rest of the data 
+            const {refreshToken, ...data} = user
+
+            // send 200 successfully login message
+            res
+            .status(200)
+            .cookie('refreshToken', refreshToken, COOKIES_OPTIONS)
+            .json(new ApiResponse(200, data, "User logged in successfully"))
         } catch(error) {
             next(error)
         }

@@ -22,6 +22,13 @@ export const payloadSchema = z.object({
     userId: z.coerce.number().positive()
 })
 
+// GOOGLE CODE SCHEMA
+export const googleCodeSchema = z.object({
+    authenticationCode: z.string()
+})
+
+
 /* --------------------------------- VALIDATION TYPES --------------------------------- */
 export type registrationType = z.infer<typeof registrationSchema>
 export type loginType = z.infer<typeof loginSchema>
+export type googleCodeType = z.infer<typeof googleCodeSchema>

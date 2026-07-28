@@ -5,6 +5,7 @@ import { ApiError } from "../utils/apiError";
 import { registrationType, loginType } from "../utils/validator";
 import { jwtUtils } from "../utils/jwt";
 import { Payload } from "../@types/interface";
+import { verifyWithGoogle } from "./googleAuth.service";
 import bcrypt from 'bcrypt'
 
 export const authServices = {
@@ -191,4 +192,67 @@ export const authServices = {
             refreshToken
         }
     },
+
+    async signInWithGoogle(authenticationCode: string) {
+        const data = await verifyWithGoogle(authenticationCode)
+        let userId: number
+
+        const [existingUser] = await db
+        .select()
+        .from(users)
+        .where(and(
+            eq(users.email, data.email),
+            eq(users.authProvider, 'google')
+        ))
+
+        if(!existingUser) {
+            const newUser: NewUser = {
+                email: data.email,
+                name: data.name,
+                authProvider: 'google'
+            }
+
+            // insert the new user into the database
+            const [result] = await db
+            .insert(users)
+            .values(newUser)
+
+            userId = result.insertId
+        }
+
+        userId = existingUser.userId
+
+        const payload: Payload = {
+            userId: userId
+        }
+
+        // generate the new access and refresh tokens
+        const accessToken: string = jwtUtils.generateAccessToken(payload)
+        const refreshToken: string = jwtUtils.generateRefreshToken(payload)
+        const expiryDate: Date = jwtUtils.getExpiryDate()
+
+        // delete the old token
+        await db
+        .delete(refreshTokens)
+        .where(eq(refreshTokens.userId, existingUser.userId))
+
+        const newToken: NewToken = {
+            userId: existingUser.userId,
+            token: refreshToken,
+            expiresAt: expiryDate
+        }
+
+        // insert the new token
+        await db
+        .insert(refreshTokens)
+        .values(newToken)
+
+        return {
+            userId: userId,
+            email: data.email,
+            name: data.name,
+            accessToken,
+            refreshToken
+        }
+    }
 }
