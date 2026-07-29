@@ -1,5 +1,6 @@
-import { mysqlTable, serial, varchar, timestamp, mysqlEnum, bigint, index } from "drizzle-orm/mysql-core";
-import { AUTH_PROVIDER } from "../utils/constants";
+import { mysqlTable, serial, varchar, timestamp, mysqlEnum, bigint, index, decimal, check } from "drizzle-orm/mysql-core";
+import { sql } from "drizzle-orm";
+import { AUTH_PROVIDER, LISTING_STATUS, BOOK_CONDITION } from "../utils/constants";
 
 /* ------------------------------------------ SCHEMA DEFINITIONS ------------------------------------------ */
 
@@ -26,6 +27,21 @@ export const refreshTokens = mysqlTable('refresh_tokens', {
     return { userIdIdx: index('user_id_idx').on(table.userId) }
 })
 
+// BOOK LISTING SCHEMA
+export const booksListings = mysqlTable('book_listings', {
+    listingId: serial('listing_id').primaryKey(),
+    sellerId: bigint('seller_id', { mode: 'number', unsigned: true }).notNull().references(() => users.userId, { onDelete: 'cascade', onUpdate: 'cascade' }),
+    isbn: varchar('isbn', {length: 20}).notNull(),
+    price: decimal('price', { precision: 8, scale: 2, mode: 'number'}).notNull(),
+    listingStatus: mysqlEnum('listing_status', LISTING_STATUS).notNull().default('available'),
+    bookCondition: mysqlEnum('book_condition', BOOK_CONDITION).notNull(),
+}, (table) => {
+    return {
+        isbnIdx: index('isbn_idx').on(table.isbn),
+        priceCheck: check('price_chk', sql`${table.price} >= 0`),
+    }
+})
+
 
 /* ------------------------------------------ TYPE DEFINITIONS ------------------------------------------ */
 
@@ -36,3 +52,7 @@ export type NewUser = typeof users.$inferInsert
 // REFRESH TOKEN TYPE
 export type Token = typeof refreshTokens.$inferSelect
 export type NewToken = typeof refreshTokens.$inferInsert
+
+// BOOK LISTING TYPE
+export type Listing = typeof booksListings.$inferSelect
+export type NewListing = typeof booksListings.$inferInsert
