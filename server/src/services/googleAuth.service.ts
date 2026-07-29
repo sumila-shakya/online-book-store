@@ -7,10 +7,9 @@ const googleClient = new OAuth2Client(
     process.env.GOOGLE_REDIRECT_URI
 )
 
-export const verifyWithGoogle = async(authenticationCode: string) => {
-    const { tokens }= await googleClient.getToken(authenticationCode)
+export const verifyWithGoogle = async(idToken: string) => {
     const ticket = await googleClient.verifyIdToken({
-        idToken: tokens.id_token!,
+        idToken: idToken,
         audience: process.env.GOOGLE_CLIENT_ID
     })
 

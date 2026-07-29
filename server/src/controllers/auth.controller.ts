@@ -110,7 +110,7 @@ export const authController = {
             const validatedData: googleCodeType = googleCodeSchema.parse(req.body)
 
             // get the user data
-            const user = await authServices.signInWithGoogle(validatedData.authenticationCode)
+            const user = await authServices.signInWithGoogle(validatedData.credential)
 
             // seperate the refresh token from the rest of the data 
             const {refreshToken, ...data} = user
@@ -119,7 +119,7 @@ export const authController = {
             res
             .status(200)
             .cookie('refreshToken', refreshToken, COOKIES_OPTIONS)
-            .json(new ApiResponse(200, data, "User logged in successfully"))
+            .json(new ApiResponse(200, data, "User signed in successfully with Google"))
         } catch(error) {
             next(error)
         }

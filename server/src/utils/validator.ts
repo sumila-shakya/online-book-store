@@ -24,7 +24,7 @@ export const payloadSchema = z.object({
 
 // GOOGLE CODE SCHEMA
 export const googleCodeSchema = z.object({
-    authenticationCode: z.string()
+    credential: z.string()
 })
 
 
