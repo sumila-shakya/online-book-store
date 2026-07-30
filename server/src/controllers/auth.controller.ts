@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { ApiError } from "../utils/apiError";
 import { ApiResponse } from "../utils/apiResponse";
 import { authServices } from "../services/auth.service";
-import { registrationSchema, loginSchema, googleCodeSchema, registrationType, loginType, googleCodeType } from "../utils/validator";
+import { registrationSchema, loginSchema, googleCodeSchema, registrationType, loginType, googleCodeType } from "../validator/auth.validator";
 import { COOKIES_OPTIONS } from "../utils/constants";
 import { jwtUtils } from "../utils/jwt";
 import { Payload } from "../@types/interface";

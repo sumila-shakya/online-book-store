@@ -1,7 +1,7 @@
 info:
   name: sign_in_with_google
   type: http
-  seq: 4
+  seq: 1
 
 http:
   method: POST

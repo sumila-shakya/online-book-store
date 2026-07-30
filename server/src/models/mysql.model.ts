@@ -35,6 +35,8 @@ export const booksListings = mysqlTable('book_listings', {
     price: decimal('price', { precision: 8, scale: 2, mode: 'number'}).notNull(),
     listingStatus: mysqlEnum('listing_status', LISTING_STATUS).notNull().default('available'),
     bookCondition: mysqlEnum('book_condition', BOOK_CONDITION).notNull(),
+    listedAt: timestamp('created_at', { mode: 'date' }).defaultNow(),
+    updatedAt: timestamp('updated_at', { mode: 'date' }).defaultNow().onUpdateNow()
 }, (table) => {
     return {
         isbnIdx: index('isbn_idx').on(table.isbn),

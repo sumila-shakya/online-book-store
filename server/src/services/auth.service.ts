@@ -2,7 +2,7 @@ import { db } from "../config/mysql.config";
 import { users, refreshTokens, User, NewUser, NewToken } from "../models/mysql.model";
 import { eq, and } from "drizzle-orm";
 import { ApiError } from "../utils/apiError";
-import { registrationType, loginType } from "../utils/validator";
+import { registrationType, loginType } from "../validator/auth.validator";
 import { jwtUtils } from "../utils/jwt";
 import { Payload } from "../@types/interface";
 import { verifyWithGoogle } from "./googleAuth.service";

@@ -4,6 +4,7 @@ import { errorHandler } from './middlewares/error.middleware'
 import cookieParser from 'cookie-parser'
 import { db } from './config/mysql.config'
 import authRouter from './routes/auth.route'
+import bookRouter from './routes/books.route'
 import cors from 'cors'
 import { CORS_OPTIONS } from './utils/constants'
 
@@ -17,6 +18,7 @@ app.use(cors(CORS_OPTIONS))
 
 // ROUTES
 app.use('/api/auth', authRouter)
+app.use('/api/books', bookRouter)
 
 // HEALTH STATUS CHECKUP
 app.get('/api/health', async (req, res, next) => {
