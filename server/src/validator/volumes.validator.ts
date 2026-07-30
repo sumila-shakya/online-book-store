@@ -24,8 +24,6 @@ export const volumeInfoSchema = z.object({
     industryIdentifiers: z.array(industryIdentifierSchema).optional(),
     pageCount: z.number().optional(),
     categories: z.array(z.string()).default([]),
-    averageRating: z.number().optional(),
-    ratingsCount: z.number().optional(),
     imageLinks: imageLinksSchema.optional(),
     language: z.string().optional()
 });

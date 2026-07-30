@@ -1,19 +1,11 @@
 info:
-  name: list_book
+  name: view_book
   type: http
-  seq: 1
+  seq: 2
 
 http:
-  method: POST
-  url: http://localhost:3000/api/books
-  body:
-    type: json
-    data: |-
-      {
-        "isbn": "9781510107489",
-        "price": 100.00,
-        "bookCondition": "very_good"
-      }
+  method: GET
+  url: http://localhost:3000/api/books/3
   auth:
     type: bearer
     token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlhdCI6MTc4NTQyMzE0MCwiZXhwIjoxNzg1NDI0OTQwfQ.nMFGAn0Qj6XNdfI-pH01g72zXxQfqNssG_wQgApMz6s
