@@ -5,6 +5,13 @@ export const LISTING_STATUS = ['available', 'sold'] as const
 export const BOOK_CONDITION = ['like_new', 'very_good', 'good', 'fair', 'poor'] as const
 export const METHODS = ['POST', 'GET', 'PATCH', 'PUT', 'DELETE'] 
 export const ALLOWED_HEADERS = ['Content-Type', 'Authorization']
+export const ALLOWED_MIME_TYPES = [
+    'image/jpeg',
+    'image/png', 
+    'image/gif',
+    'image/webp',
+    'image/svg+xml'
+] as const
 export const COOKIES_OPTIONS = {
     httpOnly: true,
     maxAge: 7*24*60*60*1000,

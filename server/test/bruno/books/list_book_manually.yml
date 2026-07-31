@@ -1,0 +1,34 @@
+info:
+  name: list_book_manually
+  type: http
+  seq: 4
+
+http:
+  method: POST
+  url: http://localhost:3000/api/books/manual
+  body:
+    type: multipart-form
+    data:
+      - name: cover
+        type: file
+        value:
+          - C:\Users\sumil\Downloads\cover.jpg
+        contentType: image/jpeg
+      - name: price
+        type: text
+        value: "100"
+      - name: bookCondition
+        type: text
+        value: good
+      - name: title
+        type: text
+        value: A man's man
+  auth:
+    type: bearer
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlhdCI6MTc4NTQ5NDA5NCwiZXhwIjoxNzg1NDk1ODk0fQ.hzGter91ggrs9o8Pcr3OnggWFAeiLyjwI85dx7axE7s
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

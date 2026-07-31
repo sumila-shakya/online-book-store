@@ -5,7 +5,7 @@ info:
 
 http:
   method: POST
-  url: http://localhost:3000/api/books
+  url: http://localhost:3000/api/books/isbn
   body:
     type: json
     data: |-
@@ -16,7 +16,7 @@ http:
       }
   auth:
     type: bearer
-    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlhdCI6MTc4NTQyMzE0MCwiZXhwIjoxNzg1NDI0OTQwfQ.nMFGAn0Qj6XNdfI-pH01g72zXxQfqNssG_wQgApMz6s
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlhdCI6MTc4NTQ4NzIzOCwiZXhwIjoxNzg1NDg5MDM4fQ.-3qf3ABfq8X-5S26oRsf6_IT-qHx1S0_bFTW1Lqyng4
 
 settings:
   encodeUrl: true

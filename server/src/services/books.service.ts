@@ -2,14 +2,17 @@ import { db } from "../config/mysql.config";
 import { booksListings, booksCatalogue, users, NewBook, NewListing } from "../models/mysql.model";
 import { eq, count, and, inArray } from "drizzle-orm";
 import { ApiError } from "../utils/apiError"
-import { bookListingType, bookFilterType } from "../validator/books.validator";
+import { bookListingByIsbnType, bookFilterType } from "../validator/books.validator";
 import { googleBookServices } from "./googleBooks.service";
 import { googleBookVolumeType, volumeInfoType } from "../validator/volumes.validator";
 import { DEFAULT_PAGE_LIMIT } from "../utils/constants";
+import { uploadOnCloudinary } from "../utils/cloudinary";
+import { ManualBookUpload } from "../@types/interface";
+
 
 
 export const bookServices = {
-    async listBookByIsbn(userId: number, data: bookListingType) {
+    async listBookByIsbn(userId: number, data: bookListingByIsbnType) {
         //check if the book exists and isbn number is not a jargon
         const items: googleBookVolumeType[] = await googleBookServices.getBooksByISBN(data.isbn)
         
@@ -29,6 +32,48 @@ export const bookServices = {
             ...(bookVolume.description && {description:bookVolume.description}),
             ...(bookVolume.authors && {authors: bookVolume.authors.join(";")}),
             ...(imageUrl && {imageUrl: imageUrl})
+        }
+
+        const [book] = await db
+        .insert(booksCatalogue)
+        .values(newBook) 
+
+        const newListing: NewListing = {
+            sellerId: userId,
+            bookId: book.insertId,
+            bookCondition: data.bookCondition,
+            price: data.price
+        }
+
+        const [result] = await db
+        .insert(booksListings)
+        .values(newListing)
+
+        const [userListing] = await db
+        .select()
+        .from(booksListings)
+        .where(eq(booksListings.listingId, result.insertId))
+
+        return userListing
+    },
+
+    async listBookManually(userId: number, data: ManualBookUpload) {
+        const newBook: NewBook = {
+            title: data.title,
+            bookSource: 'manual',
+            ...(data.description && {description:data.description}),
+            ...(data.authors && {authors: data.authors})
+        }
+
+        if(data.localFilePath) {
+            const uploadedResult = await uploadOnCloudinary(data.localFilePath)
+            
+            // throw error for failed cloudinary file upload
+            if(!uploadedResult) {
+                throw new ApiError(500, "File upload failed")
+            }
+
+            newBook.imageUrl = uploadedResult.secure_url
         }
 
         const [book] = await db

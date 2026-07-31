@@ -2,8 +2,10 @@ import { Request, Response, NextFunction } from "express";
 import { ApiError } from "../utils/apiError";
 import { ApiResponse } from "../utils/apiResponse";
 import { bookServices } from "../services/books.service";
-import { bookListingSchema, bookFilterSchema, bookListingType, bookFilterType } from "../validator/books.validator";
+import { bookListingByIsbnSchema, bookListingManuallySchema, bookFilterSchema, bookListingByIsbnType, bookListingManuallyType, bookFilterType } from "../validator/books.validator";
 import { parseId } from "../utils/validateId";
+import { ManualBookUpload } from "../@types/interface";
+import fs from 'fs'
 
 export const bookController = {
     async listBookByIsbn(req: Request, res: Response, next: NextFunction) {
@@ -16,7 +18,7 @@ export const bookController = {
                 throw new ApiError(401, "Access Denied")
             }
 
-            const data: bookListingType = bookListingSchema.parse(req.body)
+            const data: bookListingByIsbnType = bookListingByIsbnSchema.parse(req.body)
 
             const result = await bookServices.listBookByIsbn(userId, data)
 
@@ -24,6 +26,34 @@ export const bookController = {
             .status(201)
             .json(new ApiResponse(201, result, "Book listed successfully"))
         } catch(error) {
+            next(error)
+        }
+    },
+
+    async listBookManually(req: Request, res: Response, next: NextFunction) {
+        try {
+            // get the user id
+            const userId = req.user?.userId
+
+            // if the userId is missing throw error
+            if(!userId) {
+                throw new ApiError(401, "Access Denied")
+            }
+
+            const validatedData: bookListingManuallyType = bookListingManuallySchema.parse(req.body)
+            const data: ManualBookUpload = {...validatedData}
+
+            if(req.file) {
+                data.localFilePath = req.file.path
+            }
+
+            const result = await bookServices.listBookManually(userId, data)
+
+            res
+            .status(201)
+            .json(new ApiResponse(201, result, "Book listed successfully"))            
+        } catch(error) {
+            if(req.file) fs.unlinkSync(req.file.path)
             next(error)
         }
     },
