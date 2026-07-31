@@ -5,10 +5,10 @@ info:
 
 http:
   method: GET
-  url: http://localhost:3000/api/books?q=Emily
+  url: http://localhost:3000/api/books?q=978-15101-0748-9
   params:
     - name: q
-      value: Emily
+      value: 978-15101-0748-9
       type: query
   auth: inherit
 

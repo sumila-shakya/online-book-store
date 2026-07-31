@@ -1,20 +1,20 @@
 import { db } from "../config/mysql.config";
 import { booksListings, booksCatalogue, users, NewBook, NewListing } from "../models/mysql.model";
-import { eq, count, and, inArray } from "drizzle-orm";
+import { eq, count, and, inArray, sql } from "drizzle-orm";
 import { ApiError } from "../utils/apiError"
 import { bookListingByIsbnType, bookFilterType } from "../validator/books.validator";
 import { googleBookServices } from "./googleBooks.service";
 import { googleBookVolumeType, volumeInfoType } from "../validator/volumes.validator";
-import { DEFAULT_PAGE_LIMIT } from "../utils/constants";
+import { DEFAULT_PAGE_LIMIT, LISTING_STATUS } from "../utils/constants";
 import { uploadOnCloudinary } from "../utils/cloudinary";
 import { ManualBookUpload, BookInformation } from "../@types/interface";
-
-
+import { parseISBN } from "../utils/parser";
 
 export const bookServices = {
     async listBookByIsbn(userId: number, data: bookListingByIsbnType) {
         //check if the book exists and isbn number is not a jargon
-        const items: googleBookVolumeType[] = await googleBookServices.getBooksByISBN(data.isbn)
+        const cleanedISBN = data.isbn.trim().replace(/[-\s]/g,"")
+        const items: googleBookVolumeType[] = await googleBookServices.getBooksByISBN(cleanedISBN)
         
         if(items.length <= 0) {
             throw new ApiError(400, "Invalid isbn number")
@@ -28,7 +28,7 @@ export const bookServices = {
         const newBook: NewBook = {
             title: bookVolume.title,
             bookSource:'google',
-            isbn: data.isbn,
+            isbn: cleanedISBN,
             ...(bookVolume.description && {description:bookVolume.description}),
             ...(bookVolume.authors && {authors: bookVolume.authors.join(";")}),
             ...(imageUrl && {imageUrl: imageUrl})
@@ -166,95 +166,43 @@ export const bookServices = {
     },
 
     async viewBooks(filters: bookFilterType) {
-        /*
         // get the pagination data
         const page = filters.page || 1
         const limit = filters.limit || DEFAULT_PAGE_LIMIT
         const offset = (page - 1)*limit
+        
+        const queryFilters = [eq(booksListings.listingStatus, 'available')]
 
         if(filters.q) {
-            const result = await googleBookServices.searchForBooks(filters.q)
-            const items = result.items || []
-            if(items.length == 0 ) {
-                throw new ApiError(404,"Book not found")
+            if(parseISBN(filters.q.trim())) {
+                const cleanedISBN = filters.q.trim().replace(/[-\s]/g,"")
+                queryFilters.push(eq(booksCatalogue.isbn, cleanedISBN))
             }
-
-            const isbns = [...new Set(
-                items.flatMap((item) => 
-                    (item.volumeInfo?.industryIdentifiers || [])
-                    .filter((id) => ['ISBN_10', 'ISBN_13'].includes(id.type))
-                    .map((id) => id.identifier)
-                )
-            )];
-
-            const [listings, [booksCount]] = await Promise.all([
-                db
-                .select()
-                .from(booksListings)
-                .where(and(
-                    eq(booksListings.listingStatus, 'available'),
-                    inArray(booksListings.isbn, isbns)
-                ))
-                .offset(offset)
-                .limit(limit),
-
-                db
-                .select({
-                    total: count()
-                })
-                .from(booksListings)
-                .where(eq(booksListings.listingStatus, 'available'))
-            ])
-
-            if(listings.length <= 0) {
-                throw new ApiError(404,"Book not found")
-            }
-
-            const itemsViews = result.items.map((item) => {
-                const isbns = item.volumeInfo.industryIdentifiers.map((obj) => obj.identifier)
-                return {
-                    title: item.volumeInfo.title,
-                    isbns: isbns,
-                    imageLinks: item.volumeInfo.imageLinks
-                }
-            })
-            const books = listings.map((listing) => {
-                const itemView = itemsViews.filter((obj) => {
-                    if(obj.isbns.includes(listing.isbn)) {
-                        return true
-                    }
-                    else {
-                        return false
-                    }
-                })
-
-                return {
-                    listingId: listing.listingId,
-                    bookTitle: itemView.length > 0 ? itemView[0].title : undefined,
-                    sellerId: listing.sellerId,
-                    price: listing.price,
-                    listingStatus: listing.listingStatus,
-                    bookCondition: listing.bookCondition,
-                    imageLinks: itemView.length > 0 ? itemView[0].imageLinks: undefined
-                }
-            })
-
-            return {
-                paginationInfo: {
-                    totalBooksCount: booksCount.total,
-                    totalPages: Math.ceil(booksCount.total/limit),
-                    page: page,
-                    limit: limit
-                },
-                books
+            else{
+                queryFilters.push(sql`
+                    MATCH(${booksCatalogue.title}, ${booksCatalogue.authors}, ${booksCatalogue.description}) AGAINST (${filters.q.trim()} IN NATURAL LANGUAGE MODE) 
+	                AND ${booksListings.listingStatus}=${LISTING_STATUS[0]}
+                `)
             }
         }
 
         const [listings, [booksCount]] = await Promise.all([
             db
-            .select()
+            .select({
+                listingId: booksListings.listingId,
+                sellerId: booksListings.sellerId,
+                sellerName: users.name,
+                bookId:booksListings.bookId,
+                title: booksCatalogue.title,
+                imageUrl: booksCatalogue.imageUrl,
+                price: booksListings.price,
+                bookCondition: booksListings.bookCondition,
+                listingStatus: booksListings.listingStatus,
+            })
             .from(booksListings)
-            .where(eq(booksListings.listingStatus, 'available'))
+            .innerJoin(users, eq(users.userId, booksListings.sellerId))
+            .innerJoin(booksCatalogue, eq(booksCatalogue.bookId, booksListings.bookId))
+            .where(and(...queryFilters))
             .offset(offset)
             .limit(limit),
 
@@ -262,40 +210,10 @@ export const bookServices = {
             .select({
                 total: count()
             })
-            .from(booksListings)
-            .where(eq(booksListings.listingStatus, 'available'))
+            .from(booksCatalogue)
+            .innerJoin(booksListings, eq(booksListings.bookId, booksCatalogue.bookId))
+            .where(and(...queryFilters))
         ])
-
-        const bookIsbns = listings.map((listing) => listing.isbn)
-        const items: googleBookVolumeType[] = await googleBookServices.getBooksByISBNs(bookIsbns)
-        const itemsViews = items.map((item) => {
-            const isbns = item.volumeInfo.industryIdentifiers.map((obj) => obj.identifier)
-            return {
-                title: item.volumeInfo.title,
-                isbns: isbns,
-                imageLinks: item.volumeInfo.imageLinks
-            }
-        })
-        const books = listings.map((listing) => {
-            const itemView = itemsViews.filter((obj) => {
-                if(obj.isbns.includes(listing.isbn)) {
-                    return true
-                }
-                else {
-                    return false
-                }
-            })
-
-            return {
-                listingId: listing.listingId,
-                bookTitle: itemView.length > 0 ? itemView[0].title : undefined,
-                sellerId: listing.sellerId,
-                price: listing.price,
-                listingStatus: listing.listingStatus,
-                bookCondition: listing.bookCondition,
-                imageLinks: itemView.length > 0 ? itemView[0].imageLinks: undefined
-            }
-        })
 
         return {
             paginationInfo: {
@@ -304,8 +222,7 @@ export const bookServices = {
                 page: page,
                 limit: limit
             },
-            books
+            listings
         }
-    */
     }
 }

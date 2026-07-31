@@ -14,7 +14,7 @@ router.post('/manual', authMiddleware, upload.single('cover'), bookController.li
 // GET BOOK BY ID MANUALLY
 router.get('/:listingId', authMiddleware, bookController.getListedBookById)
 
-
+// BROWSE BOOKS (SEARCH BY TITLE, AUTHOR, DESCRIPTION, ISBN)
 router.get('/',bookController.viewBooks)
 
 

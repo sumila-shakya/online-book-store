@@ -3,7 +3,7 @@ import { ApiError } from "../utils/apiError";
 import { ApiResponse } from "../utils/apiResponse";
 import { bookServices } from "../services/books.service";
 import { bookListingByIsbnSchema, bookListingManuallySchema, bookFilterSchema, bookListingByIsbnType, bookListingManuallyType, bookFilterType } from "../validator/books.validator";
-import { parseId } from "../utils/validateId";
+import { parseId } from "../utils/parser";
 import { ManualBookUpload } from "../@types/interface";
 import fs from 'fs'
 
