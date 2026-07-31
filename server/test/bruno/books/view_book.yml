@@ -5,10 +5,10 @@ info:
 
 http:
   method: GET
-  url: http://localhost:3000/api/books/3
+  url: http://localhost:3000/api/books/1
   auth:
     type: bearer
-    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlhdCI6MTc4NTQ3MTE1MSwiZXhwIjoxNzg1NDcyOTUxfQ.JS6rjfQXpb2ts_Ib7jg5REZFyZflqVQtn5_Y1_WVTXk
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlhdCI6MTc4NTUwNjc2MCwiZXhwIjoxNzg1NTA4NTYwfQ._kuApTZG4muUqev32UvBuewhBWVTUI06Dndlguy5dZE
 
 settings:
   encodeUrl: true

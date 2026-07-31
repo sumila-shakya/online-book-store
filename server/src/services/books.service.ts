@@ -7,7 +7,7 @@ import { googleBookServices } from "./googleBooks.service";
 import { googleBookVolumeType, volumeInfoType } from "../validator/volumes.validator";
 import { DEFAULT_PAGE_LIMIT } from "../utils/constants";
 import { uploadOnCloudinary } from "../utils/cloudinary";
-import { ManualBookUpload } from "../@types/interface";
+import { ManualBookUpload, BookInformation } from "../@types/interface";
 
 
 
@@ -100,13 +100,18 @@ export const bookServices = {
     },
 
     async getlistedBookById(listingId: number) {
-        /*
         const [bookListing] = await db
         .select({
             listingId: booksListings.listingId,
-            isbn: booksListings.isbn,
             sellerId: booksListings.sellerId,
             sellerName: users.name,
+            bookId:booksListings.bookId,
+            title: booksCatalogue.title,
+            isbn: booksCatalogue.isbn,
+            description: booksCatalogue.description,
+            authors: booksCatalogue.authors,
+            imageUrl: booksCatalogue.imageUrl,
+            bookSource: booksCatalogue.bookSource,
             price: booksListings.price,
             bookCondition: booksListings.bookCondition,
             listingStatus: booksListings.listingStatus,
@@ -114,13 +119,36 @@ export const bookServices = {
         })
         .from(booksListings)
         .innerJoin(users, eq(users.userId, booksListings.sellerId))
+        .innerJoin(booksCatalogue, eq(booksCatalogue.bookId, booksListings.bookId))
         .where(eq(booksListings.listingId, listingId))
 
         if(!bookListing) {
             throw new ApiError(404, "Not Found")
         }
 
-        const [item]: googleBookVolumeType[] = await googleBookServices.getBooksByISBN(bookListing.isbn)
+        const bookInfo: BookInformation = {
+            title: bookListing.title,
+            ...(bookListing.isbn && {isbn: bookListing.isbn}),
+            ...(bookListing.description && {description:bookListing.description}),
+            ...(bookListing.authors && {authors: bookListing.authors}),
+            ...(bookListing.imageUrl && {imageUrl: bookListing.imageUrl})
+        }
+
+        if(bookListing.bookSource === 'google' && bookListing.isbn) {
+            const items: googleBookVolumeType[] = await googleBookServices.getBooksByISBN(bookListing.isbn)
+            const googleBook = items?.[0];
+
+            if (googleBook?.volumeInfo) {
+                const { volumeInfo } = googleBook;
+                if(volumeInfo.subtitle) bookInfo.subtitle = volumeInfo.subtitle
+                if(volumeInfo.publisher) bookInfo.publisher = volumeInfo.publisher
+                if(volumeInfo.publishedDate) bookInfo.publishedDate = volumeInfo.publishedDate
+                if(volumeInfo.pageCount) bookInfo.pageCount = volumeInfo.pageCount
+                if(volumeInfo.language) bookInfo.language = volumeInfo.language
+                if(volumeInfo.categories && volumeInfo.categories.length > 0) bookInfo.categories = volumeInfo.categories
+            }
+        }
+
 
         return {
             listingId: bookListing.listingId,
@@ -128,13 +156,13 @@ export const bookServices = {
                 sellerId: bookListing.sellerId,
                 sellerName: bookListing.sellerName
             },
-            bookInfo: item.volumeInfo,
+            bookInfo: bookInfo,
             price: bookListing.price,
             bookCondition: bookListing.bookCondition,
             listingStatus: bookListing.listingStatus,
             listedAt: bookListing.listedAt
         }
-        */
+        
     },
 
     async viewBooks(filters: bookFilterType) {

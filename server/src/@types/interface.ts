@@ -7,3 +7,17 @@ export interface Payload {
 export interface ManualBookUpload extends bookListingManuallyType {
     localFilePath?: string
 }
+
+export interface BookInformation {
+    title: string,
+    isbn?: string,
+    description?: string,
+    authors?: string,
+    imageUrl?: string,
+    subtitle?: string,
+    publisher?: string,
+    publishedDate?: string,
+    pageCount?: number,
+    categories?: string[],
+    language?: string
+}

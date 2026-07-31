@@ -8,10 +8,13 @@ const router = Router()
 // LIST BOOK BY ISBN
 router.post('/isbn',authMiddleware, bookController.listBookByIsbn)
 
-// LIST BOOKY MANUALLY
+// LIST BOOK MANUALLY
 router.post('/manual', authMiddleware, upload.single('cover'), bookController.listBookManually)
 
+// GET BOOK BY ID MANUALLY
 router.get('/:listingId', authMiddleware, bookController.getListedBookById)
+
+
 router.get('/',bookController.viewBooks)
 
 
