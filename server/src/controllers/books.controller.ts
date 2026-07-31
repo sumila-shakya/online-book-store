@@ -2,11 +2,11 @@ import { Request, Response, NextFunction } from "express";
 import { ApiError } from "../utils/apiError";
 import { ApiResponse } from "../utils/apiResponse";
 import { bookServices } from "../services/books.service";
-import { bookListingSchema, bookListingType } from "../validator/books.validator";
+import { bookListingSchema, bookFilterSchema, bookListingType, bookFilterType } from "../validator/books.validator";
 import { parseId } from "../utils/validateId";
 
 export const bookController = {
-    async listBook(req: Request, res: Response, next: NextFunction) {
+    async listBookByIsbn(req: Request, res: Response, next: NextFunction) {
         try {
             // get the user id
             const userId = req.user?.userId
@@ -18,7 +18,7 @@ export const bookController = {
 
             const data: bookListingType = bookListingSchema.parse(req.body)
 
-            const result = await bookServices.listBook(userId, data)
+            const result = await bookServices.listBookByIsbn(userId, data)
 
             res
             .status(201)
@@ -46,6 +46,20 @@ export const bookController = {
             res
             .status(200)
             .json(new ApiResponse(200, result))
+        } catch(error) {
+            next(error)
+        }
+    },
+
+    async viewBooks(req: Request, res: Response, next: NextFunction) {
+        try {
+            const filters: bookFilterType = bookFilterSchema.parse(req.query)
+
+            const books = await bookServices.viewBooks(filters)
+
+            res
+            .status(200)
+            .json(new ApiResponse(200, books))
         } catch(error) {
             next(error)
         }

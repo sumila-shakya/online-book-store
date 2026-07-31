@@ -4,8 +4,13 @@ import { bookController } from "../controllers/books.controller";
 
 const router = Router()
 
-router.post('/',authMiddleware, bookController.listBook)
+// LIST BOOK BY ISBN
+router.post('/isbn',authMiddleware, bookController.listBookByIsbn)
+
+
+
 router.get('/:listingId', authMiddleware, bookController.getListedBookById)
+router.get('/',bookController.viewBooks)
 
 
 export default router

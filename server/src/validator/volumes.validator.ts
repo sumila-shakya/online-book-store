@@ -21,7 +21,7 @@ export const volumeInfoSchema = z.object({
     publisher: z.string().optional(),
     publishedDate: z.string().optional(),
     description: z.string().optional(),
-    industryIdentifiers: z.array(industryIdentifierSchema).optional(),
+    industryIdentifiers: z.array(industryIdentifierSchema),
     pageCount: z.number().optional(),
     categories: z.array(z.string()).default([]),
     imageLinks: imageLinksSchema.optional(),
@@ -42,3 +42,4 @@ export const googleBooksSearchResponseSchema = z.object({
 /* --------------------------------- VALIDATION TYPES --------------------------------- */
 export type googleBookVolumeType = z.infer<typeof googleBookVolumeSchema>
 export type googleBookSearchResponseType = z.infer<typeof googleBooksSearchResponseSchema>
+export type volumeInfoType = z.infer<typeof volumeInfoSchema>

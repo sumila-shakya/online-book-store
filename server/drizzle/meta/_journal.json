@@ -15,6 +15,13 @@
       "when": 1785419149630,
       "tag": "0001_secret_captain_marvel",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1785486990382,
+      "tag": "0002_bent_bishop",
+      "breakpoints": true
     }
   ]
 }

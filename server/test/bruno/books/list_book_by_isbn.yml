@@ -1,5 +1,5 @@
 info:
-  name: list_book
+  name: list_book_by_isbn
   type: http
   seq: 1
 

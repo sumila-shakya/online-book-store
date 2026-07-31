@@ -1,6 +1,6 @@
-import { mysqlTable, serial, varchar, timestamp, mysqlEnum, bigint, index, decimal, check } from "drizzle-orm/mysql-core";
+import { mysqlTable, serial, varchar, timestamp, mysqlEnum, bigint, index, decimal, check, text } from "drizzle-orm/mysql-core";
 import { sql } from "drizzle-orm";
-import { AUTH_PROVIDER, LISTING_STATUS, BOOK_CONDITION } from "../utils/constants";
+import { AUTH_PROVIDER, LISTING_STATUS, BOOK_CONDITION, BOOKS_SOURCE } from "../utils/constants";
 
 /* ------------------------------------------ SCHEMA DEFINITIONS ------------------------------------------ */
 
@@ -27,11 +27,22 @@ export const refreshTokens = mysqlTable('refresh_tokens', {
     return { userIdIdx: index('user_id_idx').on(table.userId) }
 })
 
+// BOOKS CATALOGUE SCHEMA
+export const booksCatalogue = mysqlTable('books_catalogue', {
+    bookId: serial('book_id').primaryKey(),
+    title: varchar('title', { length: 500 }).notNull(),
+    isbn: varchar('isbn', {length: 20}),
+    description: text('description'),
+    authors: varchar('author', { length: 500 }),
+    imageUrl: varchar('image_url', { length: 500 }),
+    bookSource: mysqlEnum('book_source', BOOKS_SOURCE).notNull()
+})
+
 // BOOK LISTING SCHEMA
 export const booksListings = mysqlTable('book_listings', {
     listingId: serial('listing_id').primaryKey(),
     sellerId: bigint('seller_id', { mode: 'number', unsigned: true }).notNull().references(() => users.userId, { onDelete: 'cascade', onUpdate: 'cascade' }),
-    isbn: varchar('isbn', {length: 20}).notNull(),
+    bookId: bigint('book_id', { mode: 'number', unsigned: true }).notNull().references(() => booksCatalogue.bookId, { onDelete: 'cascade', onUpdate: 'cascade' }),
     price: decimal('price', { precision: 8, scale: 2, mode: 'number'}).notNull(),
     listingStatus: mysqlEnum('listing_status', LISTING_STATUS).notNull().default('available'),
     bookCondition: mysqlEnum('book_condition', BOOK_CONDITION).notNull(),
@@ -39,7 +50,6 @@ export const booksListings = mysqlTable('book_listings', {
     updatedAt: timestamp('updated_at', { mode: 'date' }).defaultNow().onUpdateNow()
 }, (table) => {
     return {
-        isbnIdx: index('isbn_idx').on(table.isbn),
         priceCheck: check('price_chk', sql`${table.price} >= 0`),
     }
 })
@@ -54,6 +64,10 @@ export type NewUser = typeof users.$inferInsert
 // REFRESH TOKEN TYPE
 export type Token = typeof refreshTokens.$inferSelect
 export type NewToken = typeof refreshTokens.$inferInsert
+
+// BOOK CATALOGUE TYPE
+export type Book = typeof booksCatalogue.$inferSelect
+export type NewBook = typeof booksCatalogue.$inferInsert
 
 // BOOK LISTING TYPE
 export type Listing = typeof booksListings.$inferSelect

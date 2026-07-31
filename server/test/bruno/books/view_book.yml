@@ -8,7 +8,7 @@ http:
   url: http://localhost:3000/api/books/3
   auth:
     type: bearer
-    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlhdCI6MTc4NTQyMzE0MCwiZXhwIjoxNzg1NDI0OTQwfQ.nMFGAn0Qj6XNdfI-pH01g72zXxQfqNssG_wQgApMz6s
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlhdCI6MTc4NTQ3MTE1MSwiZXhwIjoxNzg1NDcyOTUxfQ.JS6rjfQXpb2ts_Ib7jg5REZFyZflqVQtn5_Y1_WVTXk
 
 settings:
   encodeUrl: true
