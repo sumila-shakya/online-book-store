@@ -1,0 +1,21 @@
+info:
+  name: get_my_listings
+  type: http
+  seq: 1
+
+http:
+  method: GET
+  url: http://localhost:3000/api/sellers/my-list?listingStatus=sold
+  params:
+    - name: listingStatus
+      value: sold
+      type: query
+  auth:
+    type: bearer
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlhdCI6MTc4NTU1NTI3MCwiZXhwIjoxNzg1NTU3MDcwfQ.DFiT_RFin_kdE6e-Y0S96DqJ2H1ZLEHufwiV1n2hT6I
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
