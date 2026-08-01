@@ -2,6 +2,7 @@ import { Router } from "express";
 import { authMiddleware } from "../middlewares/auth.middleware";
 import { bookController } from "../controllers/books.controller";
 import { upload } from "../middlewares/multer.middleware";
+import { ordersController } from "../controllers/orders.controller";
 
 const router = Router()
 
@@ -16,6 +17,9 @@ router.get('/:listingId', authMiddleware, bookController.getListedBookById)
 
 // BROWSE BOOKS (SEARCH BY TITLE, AUTHOR, DESCRIPTION, ISBN)
 router.get('/',bookController.viewBooks)
+
+/* ------------------------------------ ORDER ROUTES ------------------------------------ */
+router.post('/:listingId/place-order', authMiddleware, ordersController.placeOrder)
 
 
 export default router

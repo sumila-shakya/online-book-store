@@ -6,6 +6,7 @@ import { db } from './config/mysql.config'
 import authRouter from './routes/auth.route'
 import bookRouter from './routes/books.route'
 import sellerRouter from './routes/seller.route'
+import orderRouter from './routes/orders.route'
 import cors from 'cors'
 import { CORS_OPTIONS } from './utils/constants'
 
@@ -21,6 +22,7 @@ app.use(cors(CORS_OPTIONS))
 app.use('/api/auth', authRouter)
 app.use('/api/books', bookRouter)
 app.use('/api/sellers', sellerRouter)
+app.use('/api/orders', orderRouter)
 
 // HEALTH STATUS CHECKUP
 app.get('/api/health', async (req, res, next) => {

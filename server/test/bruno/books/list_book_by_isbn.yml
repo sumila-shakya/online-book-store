@@ -10,13 +10,13 @@ http:
     type: json
     data: |-
       {
-        "isbn": "9781510107489",
+        "isbn": "9780590353427",
         "price": 100.00,
         "bookCondition": "very_good"
       }
   auth:
     type: bearer
-    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlhdCI6MTc4NTQ4NzIzOCwiZXhwIjoxNzg1NDg5MDM4fQ.-3qf3ABfq8X-5S26oRsf6_IT-qHx1S0_bFTW1Lqyng4
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsImlhdCI6MTc4NTU5MzE4MCwiZXhwIjoxNzg1NTk0OTgwfQ.kZSF9ZrF63d3sMjn-rJ_XxiDcmiIJsls7vRs0Pukjuw
 
 settings:
   encodeUrl: true

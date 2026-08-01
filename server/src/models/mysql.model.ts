@@ -1,6 +1,6 @@
 import { mysqlTable, serial, varchar, timestamp, mysqlEnum, bigint, index, decimal, check, text } from "drizzle-orm/mysql-core";
 import { sql } from "drizzle-orm";
-import { AUTH_PROVIDER, LISTING_STATUS, BOOK_CONDITION, BOOKS_SOURCE } from "../utils/constants";
+import { AUTH_PROVIDER, LISTING_STATUS, BOOK_CONDITION, BOOKS_SOURCE, ORDER_STATUS } from "../utils/constants";
 
 /* ------------------------------------------ SCHEMA DEFINITIONS ------------------------------------------ */
 
@@ -46,12 +46,25 @@ export const booksListings = mysqlTable('book_listings', {
     price: decimal('price', { precision: 8, scale: 2, mode: 'number'}).notNull(),
     listingStatus: mysqlEnum('listing_status', LISTING_STATUS).notNull().default('available'),
     bookCondition: mysqlEnum('book_condition', BOOK_CONDITION).notNull(),
-    listedAt: timestamp('created_at', { mode: 'date' }).defaultNow(),
+    listedAt: timestamp('listed_at', { mode: 'date' }).defaultNow(),
     updatedAt: timestamp('updated_at', { mode: 'date' }).defaultNow().onUpdateNow()
 }, (table) => {
     return {
         priceCheck: check('price_chk', sql`${table.price} >= 0`),
     }
+})
+
+// ORDERS SCHEMA
+export const orders = mysqlTable('orders', {
+    orderId: serial('order_id').primaryKey(),
+    sellerId: bigint('seller_id', { mode: 'number', unsigned: true }).notNull().references(() => users.userId, { onDelete: 'cascade', onUpdate: 'cascade' }),
+    buyerId: bigint('buyer_id', { mode: 'number', unsigned: true }).notNull().references(() => users.userId, { onDelete: 'cascade', onUpdate: 'cascade' }),
+    listingId: bigint('listing_id', { mode: 'number', unsigned: true }).notNull().references(() => booksListings.listingId, { onDelete: 'cascade', onUpdate: 'cascade' }),
+    orderStatus: mysqlEnum('order_status', ORDER_STATUS).notNull().default('pending'),
+    buyerVerifiedAt: timestamp('buyer_verified_at',{mode:'date'}),
+    sellerVerifiedAt: timestamp('seller_verified_at',{mode:'date'}),
+    orderedAt: timestamp('ordered_at', { mode: 'date' }).defaultNow(),
+    updatedAt: timestamp('updated_at', { mode: 'date' }).defaultNow().onUpdateNow()
 })
 
 
@@ -72,3 +85,7 @@ export type NewBook = typeof booksCatalogue.$inferInsert
 // BOOK LISTING TYPE
 export type Listing = typeof booksListings.$inferSelect
 export type NewListing = typeof booksListings.$inferInsert
+
+// ORDERS TYPE
+export type Order = typeof orders.$inferSelect
+export type NewOrder = typeof orders.$inferInsert

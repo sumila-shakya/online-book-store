@@ -195,7 +195,7 @@ export const authServices = {
 
     async signInWithGoogle(credential: string) {
         const data = await verifyWithGoogle(credential)
-        let userId
+        let userId: number
 
         const [existingUser] = await db
         .select()

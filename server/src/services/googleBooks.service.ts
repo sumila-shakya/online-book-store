@@ -15,6 +15,7 @@ export const googleBookServices = {
         })
 
         const data: googleBookSearchResponseType = googleBooksSearchResponseSchema.parse(response.data)
+        console.log(data)
         return data.items
     },
 
