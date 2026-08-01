@@ -3,6 +3,7 @@ import { users, booksCatalogue, booksListings } from "../models/mysql.model";
 import { eq, count, and, sql } from "drizzle-orm";
 import { ApiError } from "../utils/apiError";
 import { sellerListingFilterType } from "../validator/seller.validation";
+import { paginationType } from "../validator/global.validator";
 import { DEFAULT_PAGE_LIMIT, LISTING_STATUS } from "../utils/constants";
 
 export const sellerServices = {
@@ -66,7 +67,64 @@ export const sellerServices = {
         }
     },
 
-    async viewSellerListing(sellerId: number) {
+    async viewSellerListing(sellerId: number, paginationData: paginationType) {
+        // get the pagination data
+        const page = paginationData.page || 1
+        const limit = paginationData.limit || DEFAULT_PAGE_LIMIT
+        const offset = (page - 1)*limit
 
+        const [existingSeller] = await db
+        .select()
+        .from(users)
+        .where(eq(users.userId, sellerId))
+
+        if(!existingSeller) {
+            throw new ApiError(404, "Seller not found")
+        }
+
+        const [listings, [booksCount]] = await Promise.all([
+            db
+            .select({
+                listingId: booksListings.listingId,
+                sellerId: booksListings.sellerId,
+                sellerName: users.name,
+                bookId:booksListings.bookId,
+                title: booksCatalogue.title,
+                imageUrl: booksCatalogue.imageUrl,
+                price: booksListings.price,
+                bookCondition: booksListings.bookCondition,
+                listingStatus: booksListings.listingStatus,
+            })
+            .from(booksListings)
+            .innerJoin(users, eq(users.userId, booksListings.sellerId))
+            .innerJoin(booksCatalogue, eq(booksCatalogue.bookId, booksListings.bookId))
+            .where(and(
+                eq(booksListings.sellerId, sellerId),
+                eq(booksListings.listingStatus,  'available')
+            ))
+            .offset(offset)
+            .limit(limit),
+
+            db
+            .select({
+                total: count()
+            })
+            .from(booksCatalogue)
+            .innerJoin(booksListings, eq(booksListings.bookId, booksCatalogue.bookId))
+            .where(and(
+                eq(booksListings.sellerId, sellerId),
+                eq(booksListings.listingStatus,  'available')
+            ))
+        ])
+
+        return {
+            paginationInfo: {
+                totalBooksCount: booksCount.total,
+                totalPages: Math.ceil(booksCount.total/limit),
+                page: page,
+                limit: limit
+            },
+            listings
+        }
     }
 }
