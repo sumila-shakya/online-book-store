@@ -30,7 +30,22 @@ export const ordersController = {
 
     async cancelOrder(req: Request, res: Response, next: NextFunction) {
         try {
+            // get the user id
+            const userId = req.user?.userId
 
+            // if the userId is missing throw error
+            if(!userId) {
+                throw new ApiError(401, "Access Denied")
+            }
+
+            // parse the task id
+            const orderId = parseId(req.params.orderId as string)
+
+            await ordersServices.cancelOrder(userId, orderId)
+
+            res
+            .status(200)
+            .json(new ApiResponse(200, {}, "Order cancelled successfully"))
         } catch(error) {
             next(error)
         }

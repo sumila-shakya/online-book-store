@@ -1,0 +1,17 @@
+info:
+  name: cancel_order
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: http://localhost:3000/api/orders/1
+  auth:
+    type: bearer
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsImlhdCI6MTc4NTU5NzA2MCwiZXhwIjoxNzg1NTk4ODYwfQ.L1rWFB4t3LZOxp3dv_pfXGl2EWTo_z9qba5URkvI5cI
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

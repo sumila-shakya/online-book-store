@@ -49,8 +49,37 @@ export const ordersServices = {
         })
     },
 
-    async cancelOrder() {
+    async cancelOrder(userId: number, orderId: number) {
+        const [existingOrder] = await db
+        .select()
+        .from(orders)
+        .where(and(
+            eq(orders.orderId, orderId),
+            eq(orders.buyerId, userId)
+        ))
 
+        if(!existingOrder) {
+            throw new ApiError(403, "Access denied")
+        }
+
+        if(existingOrder.orderStatus !== 'pending') {
+            throw new ApiError(409, `${existingOrder.orderStatus} order cannot be cancelled`)
+        }
+
+        await db.transaction(async(tx) => {
+            await tx
+            .update(orders)
+            .set({
+                orderStatus: 'cancelled'
+            })
+            .where(eq(orders.orderId, orderId))
+
+            await tx
+            .update(booksListings)
+            .set({
+                listingStatus: 'available'
+            })
+        })
     },
 
     async confirmOrderByBuyer() {
