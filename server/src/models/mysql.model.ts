@@ -1,4 +1,4 @@
-import { mysqlTable, serial, varchar, timestamp, mysqlEnum, bigint, index, decimal, check, text } from "drizzle-orm/mysql-core";
+import { mysqlTable, serial, varchar, timestamp, mysqlEnum, bigint, index, decimal, check, text, smallint, unique } from "drizzle-orm/mysql-core";
 import { sql } from "drizzle-orm";
 import { AUTH_PROVIDER, LISTING_STATUS, BOOK_CONDITION, BOOKS_SOURCE, ORDER_STATUS } from "../utils/constants";
 
@@ -12,6 +12,12 @@ export const users = mysqlTable('users', {
     googleId: varchar('google_id', { length: 255 }).unique(),
     authProvider: mysqlEnum('auth_provider', AUTH_PROVIDER).notNull().default('local'),
     name: varchar('name', { length: 100 }).notNull(),
+    avgSellerRating: decimal('avg_seller_rating', { precision: 8, scale: 2, mode: 'number'}),
+    avgBuyerRating: decimal('avg_buyer_rating', { precision: 8, scale: 2, mode: 'number'}),
+    sellerReviewSum: bigint('seller_review_sum', { mode: 'number', unsigned: true }).notNull().default(0),
+    buyerReviewSum: bigint('buyer_review_sum', { mode: 'number', unsigned: true }).notNull().default(0),
+    sellerReviewCount: bigint('seller_review_count', { mode: 'number', unsigned: true }).notNull().default(0),
+    buyerReviewCount: bigint('buyer_review_count', { mode: 'number', unsigned: true }).notNull().default(0),
     createdAt: timestamp('created_at', { mode: 'date' }).defaultNow(),
     updatedAt: timestamp('updated_at', { mode: 'date' }).defaultNow().onUpdateNow()
 })
@@ -67,6 +73,22 @@ export const orders = mysqlTable('orders', {
     updatedAt: timestamp('updated_at', { mode: 'date' }).defaultNow().onUpdateNow()
 })
 
+// REVIEWS SCHEMA
+export const reviews = mysqlTable('review', {
+    reviewId: serial('review_id').primaryKey(),
+    reviewerId: bigint('reviewer_id', { mode: 'number', unsigned: true }).notNull().references(() => users.userId, { onDelete: 'cascade', onUpdate: 'cascade' }),
+    revieweeId: bigint('reviewee_id', { mode: 'number', unsigned: true }).notNull().references(() => users.userId, { onDelete: 'cascade', onUpdate: 'cascade' }),
+    orderId: bigint('order_id', { mode: 'number', unsigned: true }).notNull().references(() => orders.orderId, { onDelete: 'cascade', onUpdate: 'cascade' }),
+    rating: smallint('rating').notNull(),
+    reviewedAt: timestamp('reviewed_at', { mode: 'date' }).defaultNow(),
+}, (table) => {
+    return { 
+        ratingCheck: check('rating_chk', sql`${table.rating} BETWEEN 1 AND 5`),
+        uniqueReviewer: unique('unique_reviewer').on(table.orderId, table.reviewerId),
+        uniqueReviewee: unique('unique_reviewee').on(table.orderId, table.revieweeId)
+    }
+})
+
 
 /* ------------------------------------------ TYPE DEFINITIONS ------------------------------------------ */
 
@@ -89,3 +111,7 @@ export type NewListing = typeof booksListings.$inferInsert
 // ORDERS TYPE
 export type Order = typeof orders.$inferSelect
 export type NewOrder = typeof orders.$inferInsert
+
+// REVIEWS TYPE
+export type Review = typeof reviews.$inferSelect
+export type NewReview = typeof reviews.$inferInsert
