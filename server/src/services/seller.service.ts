@@ -18,12 +18,24 @@ export const sellerServices = {
             queryFilters.push(eq(booksListings.listingStatus, data.listingStatus))
         }
 
-        const [summary, listings, [listingCount]] = await Promise.all([
+        const [[sellerInfo], [summary], listings, [listingCount]] = await Promise.all([
+            db
+            .select({
+                sellerId: users.userId,
+                sellerName: users.name,
+                avgSellerRating: users.avgSellerRating,
+                sellerReviewCount: users.sellerReviewCount
+            })
+            .from(users)
+            .where(eq(users.userId, userId))
+            ,
+
             db
             .select({
                 totalListings: count(),
                 availableBooks: sql<number>`SUM(CASE WHEN ${booksListings.listingStatus} = ${LISTING_STATUS[0]} THEN 1 ELSE 0 END)`.mapWith(Number),
-                soldBooks: sql<number>`SUM(CASE WHEN ${booksListings.listingStatus} = ${LISTING_STATUS[1]} THEN 1 ELSE 0 END)`.mapWith(Number),
+                reservedBooks: sql<number>`SUM(CASE WHEN ${booksListings.listingStatus} = ${LISTING_STATUS[1]} THEN 1 ELSE 0 END)`.mapWith(Number),
+                soldBooks: sql<number>`SUM(CASE WHEN ${booksListings.listingStatus} = ${LISTING_STATUS[2]} THEN 1 ELSE 0 END)`.mapWith(Number),
             })
             .from(booksListings)
             .where(eq(booksListings.sellerId, userId)),
@@ -62,6 +74,7 @@ export const sellerServices = {
                 page: page,
                 limit: limit
             },
+            sellerInfo,
             summary,
             listings
         }
@@ -88,6 +101,7 @@ export const sellerServices = {
                 listingId: booksListings.listingId,
                 sellerId: booksListings.sellerId,
                 sellerName: users.name,
+                sellerRating: users.avgSellerRating,
                 bookId:booksListings.bookId,
                 title: booksCatalogue.title,
                 imageUrl: booksCatalogue.imageUrl,

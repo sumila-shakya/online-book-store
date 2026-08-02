@@ -268,7 +268,7 @@ export const authServices = {
         }
 
         //extract data without the password
-        const { password , ...userInfo} = userAccount
+        const { password, googleId, sellerReviewSum, buyerReviewSum , ...userInfo} = userAccount
 
         //return the data without the password
         return userInfo

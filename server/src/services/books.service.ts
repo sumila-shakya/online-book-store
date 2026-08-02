@@ -110,6 +110,7 @@ export const bookServices = {
             listingId: booksListings.listingId,
             sellerId: booksListings.sellerId,
             sellerName: users.name,
+            sellerRating: users.avgSellerRating,
             bookId:booksListings.bookId,
             title: booksCatalogue.title,
             isbn: booksCatalogue.isbn,
@@ -159,7 +160,8 @@ export const bookServices = {
             listingId: bookListing.listingId,
             sellerInfo:{
                 sellerId: bookListing.sellerId,
-                sellerName: bookListing.sellerName
+                sellerName: bookListing.sellerName,
+                sellerRating: bookListing.sellerRating
             },
             bookInfo: bookInfo,
             price: bookListing.price,
@@ -197,6 +199,7 @@ export const bookServices = {
                 listingId: booksListings.listingId,
                 sellerId: booksListings.sellerId,
                 sellerName: users.name,
+                sellerRating: users.avgSellerRating,
                 bookId:booksListings.bookId,
                 title: booksCatalogue.title,
                 imageUrl: booksCatalogue.imageUrl,
