@@ -8,7 +8,7 @@ http:
   url: http://localhost:3000/api/orders/1
   auth:
     type: bearer
-    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsImlhdCI6MTc4NTU5NzA2MCwiZXhwIjoxNzg1NTk4ODYwfQ.L1rWFB4t3LZOxp3dv_pfXGl2EWTo_z9qba5URkvI5cI
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsImlhdCI6MTc4NTY0NzE0MSwiZXhwIjoxNzg1NjQ4OTQxfQ.DZe98dOz_6DorNJXG6ulX65uCqMeXacnp8M3ne_zLfs
 
 settings:
   encodeUrl: true

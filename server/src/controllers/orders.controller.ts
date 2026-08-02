@@ -53,7 +53,22 @@ export const ordersController = {
 
     async confirmOrderByBuyer(req: Request, res: Response, next: NextFunction) {
         try {
+            // get the user id
+            const userId = req.user?.userId
 
+            // if the userId is missing throw error
+            if(!userId) {
+                throw new ApiError(401, "Access Denied")
+            }
+
+            // parse the task id
+            const orderId = parseId(req.params.orderId as string)
+
+            await ordersServices.confirmOrderByBuyer(userId, orderId)
+
+            res
+            .status(200)
+            .json(new ApiResponse(200, {}, "Buyer confirmation received successfully"))
         } catch(error) {
             next(error)
         }
@@ -61,7 +76,22 @@ export const ordersController = {
 
     async confirmOrderBySeller(req: Request, res: Response, next: NextFunction) {
         try {
+            // get the user id
+            const userId = req.user?.userId
 
+            // if the userId is missing throw error
+            if(!userId) {
+                throw new ApiError(401, "Access Denied")
+            }
+
+            // parse the task id
+            const orderId = parseId(req.params.orderId as string)
+
+            await ordersServices.confirmOrderBySeller(userId, orderId)
+
+            res
+            .status(200)
+            .json(new ApiResponse(200, {}, "Buyer confirmation received successfully"))
         } catch(error) {
             next(error)
         }

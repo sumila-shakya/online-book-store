@@ -1,11 +1,11 @@
 info:
-  name: logout
+  name: confirm_seller
   type: http
-  seq: 1
+  seq: 4
 
 http:
   method: POST
-  url: http://localhost:3000/api/auth/logout
+  url: http://localhost:3000/api/orders/2/seller-confirm
   auth:
     type: bearer
     token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlhdCI6MTc4NTY0ODc4OCwiZXhwIjoxNzg1NjUwNTg4fQ.tm6rbfYKcHgEuRF4zTIjDtMGRRrl_EavY7iorBp3DI8

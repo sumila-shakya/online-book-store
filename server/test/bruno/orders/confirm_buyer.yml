@@ -1,11 +1,11 @@
 info:
-  name: place_order
+  name: confirm_buyer
   type: http
-  seq: 1
+  seq: 3
 
 http:
   method: POST
-  url: http://localhost:3000/api/books/2/place-order
+  url: http://localhost:3000/api/orders/2/buyer-confirm
   auth:
     type: bearer
     token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsImlhdCI6MTc4NTY0ODcwNywiZXhwIjoxNzg1NjUwNTA3fQ.eEaE3PAG66TiZ4nDoaIBkDh92q0jLva-DCdjZnegG_M

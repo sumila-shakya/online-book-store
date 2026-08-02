@@ -79,14 +79,68 @@ export const ordersServices = {
             .set({
                 listingStatus: 'available'
             })
+            .where(eq(booksListings.listingId, existingOrder.listingId))
         })
     },
 
-    async confirmOrderByBuyer() {
+    async confirmOrderByBuyer(userId: number, orderId: number) {
+        const [existingOrder] = await db
+        .select()
+        .from(orders)
+        .where(and(
+            eq(orders.orderId, orderId),
+            eq(orders.buyerId, userId)
+        ))
 
+        if(!existingOrder) {
+            throw new ApiError(403, "Access denied")
+        }
+
+        if(existingOrder.orderStatus !== 'pending') {
+            throw new ApiError(409, `${existingOrder.orderStatus} order cannot be processed`)
+        }
+
+        await db
+        .update(orders)
+        .set({
+            orderStatus: 'product_received',
+            buyerVerifiedAt: new Date()
+        })
+        .where(eq(orders.orderId, orderId))
     },
 
-    async confirmOrderBySeller() {
+    async confirmOrderBySeller(userId: number, orderId: number) {
+        const [existingOrder] = await db
+        .select()
+        .from(orders)
+        .where(and(
+            eq(orders.orderId, orderId),
+            eq(orders.sellerId, userId)
+        ))
 
+        if(!existingOrder) {
+            throw new ApiError(403, "Access denied")
+        }
+
+        if(existingOrder.orderStatus !== 'product_received') {
+            throw new ApiError(409, `${existingOrder.orderStatus} order cannot be processed`)
+        }
+
+        await db.transaction(async (tx) => {
+            await tx
+            .update(orders)
+            .set({
+                orderStatus: 'successful',
+                sellerVerifiedAt: new Date()
+            })
+            .where(eq(orders.orderId, orderId))
+
+            await tx
+            .update(booksListings)
+            .set({
+                listingStatus: 'sold'
+            })
+            .where(eq(booksListings.listingId, existingOrder.listingId))
+        })
     }
 }
