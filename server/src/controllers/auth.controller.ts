@@ -135,8 +135,10 @@ export const authController = {
                 throw new ApiError(401, "Access Denied")
             }
 
+            // get user account
             const userAccount = await authServices.getAccount(userId)
 
+            // send 200 success message
             res
             .status(200)
             .json(new ApiResponse(200, userAccount))

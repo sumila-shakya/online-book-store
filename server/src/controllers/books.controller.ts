@@ -18,10 +18,13 @@ export const bookController = {
                 throw new ApiError(401, "Access Denied")
             }
 
+            // get the data from the req.body
             const data: bookListingByIsbnType = bookListingByIsbnSchema.parse(req.body)
 
+            // get the result
             const result = await bookServices.listBookByIsbn(userId, data)
 
+            // send 201 success msg
             res
             .status(201)
             .json(new ApiResponse(201, result, "Book listed successfully"))

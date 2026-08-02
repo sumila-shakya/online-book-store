@@ -7,4 +7,5 @@ export const sellerListingFilterSchema = z.object({
     limit: z.coerce.number().positive().max(DEFAULT_PAGE_LIMIT).optional(),
 })
 
+/* --------------------------------- VALIDATION TYPES --------------------------------- */
 export type sellerListingFilterType = z.infer<typeof sellerListingFilterSchema>

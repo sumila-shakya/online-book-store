@@ -21,6 +21,7 @@ export const bookFilterSchema = z.object({
     limit: z.coerce.number().positive().max(DEFAULT_PAGE_LIMIT).optional(),
 })
 
+/* --------------------------------- VALIDATION TYPES --------------------------------- */
 export type bookListingByIsbnType = z.infer<typeof bookListingByIsbnSchema>
 export type bookListingManuallyType = z.infer<typeof bookListingManuallySchema>
 export type bookFilterType = z.infer<typeof bookFilterSchema>

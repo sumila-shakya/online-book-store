@@ -33,7 +33,7 @@ export const bookServices = {
         const newBook: NewBook = {
             title: bookVolume.title,
             bookSource:'google',
-            isbn: cleanedISBN,
+            isbn: cleanedISBN, // can be either isbn 10 or isbn 13
             ...(bookVolume.description && {description:bookVolume.description}),
             ...(bookVolume.authors && {authors: bookVolume.authors.join(";")}),
             ...(imageUrl && {imageUrl: imageUrl})

@@ -13,6 +13,7 @@ export const parseId = (value: string): number => {
     return id
 }
 
+// parse the isbn function
 export const parseISBN = (value: string) => {
     const cleanedISBN = value.replace(/[-\s]/g,"")
     return /^(\d{10}|\d{9}X|\d{13})$/i.test(cleanedISBN)

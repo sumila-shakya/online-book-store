@@ -6,4 +6,5 @@ export const paginationSchema = z.object({
     limit: z.coerce.number().positive().max(DEFAULT_PAGE_LIMIT).optional(),
 })
 
+/* --------------------------------- VALIDATION TYPES --------------------------------- */
 export type paginationType = z.infer<typeof paginationSchema>
