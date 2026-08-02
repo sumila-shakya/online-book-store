@@ -53,12 +53,13 @@ export const ordersServices = {
         const [existingOrder] = await db
         .select()
         .from(orders)
-        .where(and(
-            eq(orders.orderId, orderId),
-            eq(orders.buyerId, userId)
-        ))
+        .where(eq(orders.orderId, orderId))
 
         if(!existingOrder) {
+            throw new ApiError(404, "Not found")
+        }
+
+        if(userId !== existingOrder.buyerId && userId !== existingOrder.sellerId) {
             throw new ApiError(403, "Access denied")
         }
 
