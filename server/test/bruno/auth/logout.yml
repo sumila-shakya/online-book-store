@@ -8,7 +8,7 @@ http:
   url: http://localhost:3000/api/auth/logout
   auth:
     type: bearer
-    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlhdCI6MTc4NTMyMzY2NSwiZXhwIjoxNzg1MzI1NDY1fQ.HZGO1ljAv6hw2C-s7tHI5khlr38Pd7oz39RMIv9cFaU
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlhdCI6MTc4NTY0MzA3OCwiZXhwIjoxNzg1NjQ0ODc4fQ.ID3j7k6TlDCRu_pCPe_5yI9YtHvy3MAzwx9XmS6HohA
 
 settings:
   encodeUrl: true

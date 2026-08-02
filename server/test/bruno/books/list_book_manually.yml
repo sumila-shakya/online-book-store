@@ -25,7 +25,7 @@ http:
         value: A man's man
   auth:
     type: bearer
-    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsImlhdCI6MTc4NTU5MzE4MCwiZXhwIjoxNzg1NTk0OTgwfQ.kZSF9ZrF63d3sMjn-rJ_XxiDcmiIJsls7vRs0Pukjuw
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlhdCI6MTc4NTU5ODQ3NywiZXhwIjoxNzg1NjAwMjc3fQ.jik4eJ2jZhQjgx0GKV9wDlNHujfWGme46FzJFTCKwF8
 
 settings:
   encodeUrl: true

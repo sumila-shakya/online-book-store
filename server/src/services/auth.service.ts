@@ -209,6 +209,7 @@ export const authServices = {
             const newUser: NewUser = {
                 email: data.email,
                 name: data.name,
+                googleId: data.googleId,
                 authProvider: 'google'
             }
 
@@ -254,5 +255,22 @@ export const authServices = {
             accessToken,
             refreshToken
         }
+    },
+
+    async getAccount(userId: number) {
+        const [userAccount] = await db
+        .select()
+        .from(users)
+        .where(eq(users.userId, userId))
+
+        if(!userAccount) {
+            throw new ApiError(404, "Not Found")
+        }
+
+        //extract data without the password
+        const { password , ...userInfo} = userAccount
+
+        //return the data without the password
+        return userInfo
     }
 }

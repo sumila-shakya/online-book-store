@@ -10,13 +10,13 @@ http:
     type: json
     data: |-
       {
-        "isbn": "9780590353427",
+        "isbn": "0307283658",
         "price": 100.00,
         "bookCondition": "very_good"
       }
   auth:
     type: bearer
-    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsImlhdCI6MTc4NTU5MzE4MCwiZXhwIjoxNzg1NTk0OTgwfQ.kZSF9ZrF63d3sMjn-rJ_XxiDcmiIJsls7vRs0Pukjuw
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlhdCI6MTc4NTY0MzA3OCwiZXhwIjoxNzg1NjQ0ODc4fQ.ID3j7k6TlDCRu_pCPe_5yI9YtHvy3MAzwx9XmS6HohA
 
 settings:
   encodeUrl: true

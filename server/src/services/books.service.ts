@@ -14,10 +14,15 @@ export const bookServices = {
     async listBookByIsbn(userId: number, data: bookListingByIsbnType) {
         //check if the book exists and isbn number is not a jargon
         const cleanedISBN = data.isbn.trim().replace(/[-\s]/g,"")
+
+        if(!parseISBN(cleanedISBN)) {
+            throw new ApiError(400, "Invalid ISBN")
+        }
+
         const items: googleBookVolumeType[] = await googleBookServices.getBooksByISBN(cleanedISBN)
         
         if(items.length <= 0) {
-            throw new ApiError(400, "Invalid isbn number")
+            throw new ApiError(500, "Sorry, book can't be found!!")
         }
 
         const bookVolume: volumeInfoType = items[0].volumeInfo

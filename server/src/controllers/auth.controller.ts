@@ -124,4 +124,24 @@ export const authController = {
             next(error)
         }
     },
+
+    async getAccount(req: Request, res: Response, next: NextFunction) {
+        try {
+            // get the user id
+            const userId = req.user?.userId
+
+            // if the userId is missing throw error
+            if(!userId) {
+                throw new ApiError(401, "Access Denied")
+            }
+
+            const userAccount = await authServices.getAccount(userId)
+
+            res
+            .status(200)
+            .json(new ApiResponse(200, userAccount))
+        } catch(error) {
+            next(error)
+        }
+    }
 }

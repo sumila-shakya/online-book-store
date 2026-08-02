@@ -7,55 +7,38 @@ const googleBooksClient = axios.create({
 
 export const googleBookServices = {
     async getBooksByISBN(isbn: string) {
+        
         const response = await googleBooksClient.get('/volumes', {
             params: {
                 q: `isbn:${isbn}`,
                 key: process.env.GOOGLE_BOOKS_API_KEY
             }
         })
-
         const data: googleBookSearchResponseType = googleBooksSearchResponseSchema.parse(response.data)
-        console.log(data)
-        return data.items
-    },
 
-    async searchForBooks(queryString: string) {
-        const response = await googleBooksClient.get('/volumes', {
-            params: {
-                q: queryString,
-                key: process.env.GOOGLE_BOOKS_API_KEY
+        if(data.items.length === 0) {
+            if(isbn.length === 13) {
+                const isbn10 = isbn.slice(3)
+                const response = await googleBooksClient.get('/volumes', {
+                    params: {
+                        q: `isbn:${isbn10}`,
+                        key: process.env.GOOGLE_BOOKS_API_KEY
+                    }
+                })
+                const data: googleBookSearchResponseType = googleBooksSearchResponseSchema.parse(response.data)
+                if(data.items.length > 0) return data.items
             }
-        })
-
-        const data: googleBookSearchResponseType = googleBooksSearchResponseSchema.parse(response.data)
-        console.log(data)
-        return data
-    },
-
-    async getBooksByISBNs(isbns: string[]) {
-        const requests = isbns.map((isbn) => {
-            return googleBooksClient.get('/volumes', {
+            const response = await googleBooksClient.get('/volumes', {
                 params: {
-                    q: `isbn:${isbn}`,
-                    maxResults: 1,
+                    q: isbn,
                     key: process.env.GOOGLE_BOOKS_API_KEY
                 }
             })
-        })
+            const data: googleBookSearchResponseType = googleBooksSearchResponseSchema.parse(response.data)
+            if(data.items.length > 0) return data.items
+        }
 
-        const responses = await Promise.allSettled(requests)
-        const bookDatas = responses.map((response) => {
-            if(response.status == 'fulfilled') {
-                const data:googleBookSearchResponseType = googleBooksSearchResponseSchema.parse(response.value.data)
-                if(data.items.length > 0) {
-                    const bookData = data.items[0]
-                    return bookData
-                }
-            }
-        }).filter((bookData) => bookData !== undefined)
-
-        console.log(bookDatas)
-
-        return bookDatas
-    },
+        console.log(data)
+        return data.items
+    }
 }

@@ -9,5 +9,6 @@ router.post('/login', authController.loginUser)
 router.post('/google', authController.signInWithGoogle)
 router.post('/logout', authMiddleware, authController.logout)
 router.post('/refresh', authController.refreshToken)
+router.get('/my-account',authMiddleware, authController.getAccount)
 
 export default router

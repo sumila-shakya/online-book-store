@@ -1,0 +1,17 @@
+info:
+  name: get_account
+  type: http
+  seq: 6
+
+http:
+  method: GET
+  url: http://localhost:3000/api/auth/my-account
+  auth:
+    type: bearer
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlhdCI6MTc4NTU5ODQ3NywiZXhwIjoxNzg1NjAwMjc3fQ.jik4eJ2jZhQjgx0GKV9wDlNHujfWGme46FzJFTCKwF8
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
