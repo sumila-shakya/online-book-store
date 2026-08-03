@@ -111,6 +111,8 @@ export const bookServices = {
             sellerId: booksListings.sellerId,
             sellerName: users.name,
             sellerRating: users.avgSellerRating,
+            phoneNo: users.phoneNo,
+            isVerified: users.isVerified,
             bookId:booksListings.bookId,
             title: booksCatalogue.title,
             isbn: booksCatalogue.isbn,

@@ -279,7 +279,9 @@ export const ordersServices = {
             counterParty: {
                 userId: users.userId,
                 name: users.name,
-                userRating: userId === existingOrder.buyerId ? users.avgSellerRating : users.avgBuyerRating
+                userRating: userId === existingOrder.buyerId ? users.avgSellerRating : users.avgBuyerRating,
+                phoneNo: users.phoneNo,
+                isverified: users.isVerified
             },
             bookInfo: {
                 bookId: booksCatalogue.bookId,
