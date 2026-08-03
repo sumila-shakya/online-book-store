@@ -2,10 +2,12 @@ import { Router } from "express";
 import { authMiddleware } from "../middlewares/auth.middleware";
 import { ordersController } from "../controllers/orders.controller";
 import { reviewController } from "../controllers/review.controller";
+import { requirePhoneVerified } from "../middlewares/phone.middleware";
 
 const router = Router()
 
 router.use(authMiddleware)
+router.use(requirePhoneVerified)
 
 router.post('/:orderId', ordersController.cancelOrder)
 router.post('/:orderId/buyer-confirm', ordersController.confirmOrderByBuyer)

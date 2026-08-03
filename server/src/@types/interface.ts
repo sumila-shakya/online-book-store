@@ -1,7 +1,8 @@
 import { bookListingManuallyType } from "../validator/books.validator"
 
 export interface Payload {
-    userId: number
+    userId: number,
+    isVerified: boolean
 }
 
 export interface ManualBookUpload extends bookListingManuallyType {

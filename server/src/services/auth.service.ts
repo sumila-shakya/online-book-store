@@ -1,11 +1,12 @@
 import { db } from "../config/mysql.config";
-import { users, refreshTokens, User, NewUser, NewToken } from "../models/mysql.model";
+import { users, refreshTokens, otps, User, NewUser, NewToken, NewOTP } from "../models/mysql.model";
 import { eq, and } from "drizzle-orm";
 import { ApiError } from "../utils/apiError";
-import { registrationType, loginType } from "../validator/auth.validator";
+import { registrationType, loginType, requestVerificationType, verifyPhoneNoType } from "../validator/auth.validator";
 import { jwtUtils } from "../utils/jwt";
 import { Payload } from "../@types/interface";
 import { verifyWithGoogle } from "./googleAuth.service";
+import { generateOTP, hashOTP, sendOtp } from "../utils/otp";
 import bcrypt from 'bcrypt'
 
 export const authServices = {
@@ -36,7 +37,8 @@ export const authServices = {
         .values(newUser)
 
         const payload: Payload = {
-            userId: result.insertId
+            userId: result.insertId,
+            isVerified: false
         }
 
         // generate the new access and refresh tokens
@@ -96,7 +98,8 @@ export const authServices = {
         }
 
         const payload: Payload = {
-            userId: existingUser.userId
+            userId: existingUser.userId,
+            isVerified: existingUser.isVerified
         }
 
         // generate the new access and refresh tokens
@@ -138,14 +141,20 @@ export const authServices = {
 
     async refreshToken(token: string, userId: number) {
         //check for the existing token record
-        const [tokenRecord] = await db
-        .select()
-        .from(refreshTokens)
-        .where(and(
-            eq(refreshTokens.userId, userId),
-            eq(refreshTokens.token, token)
-        ))
+        const [[tokenRecord], [existingUser]] = await Promise.all([
+            db
+            .select()
+            .from(refreshTokens)
+            .where(and(
+                eq(refreshTokens.userId, userId),
+                eq(refreshTokens.token, token)
+            )),
 
+            db
+            .select()
+            .from(users)
+            .where(eq(users.userId, userId))
+        ])
         // throw error if token record doesn't exists
         if(!tokenRecord) {
             throw new ApiError(401, "Access Denied")
@@ -162,7 +171,8 @@ export const authServices = {
         }
 
         const payload: Payload = {
-            userId: userId
+            userId: userId,
+            isVerified: existingUser.isVerified
         }
 
         // generate the new access and refresh tokens
@@ -219,12 +229,14 @@ export const authServices = {
             .values(newUser)
 
             userId = result.insertId
+
         }
 
         userId = existingUser.userId
 
         const payload: Payload = {
-            userId: userId
+            userId: userId,
+            isVerified: existingUser ? existingUser.isVerified : false
         }
 
         // generate the new access and refresh tokens
@@ -272,5 +284,92 @@ export const authServices = {
 
         //return the data without the password
         return userInfo
+    },
+
+    async requestVerification(userId: number, data: requestVerificationType) {
+        const [[user], [existingRecord]] = await Promise.all([
+            db
+            .select()
+            .from(users)
+            .where(eq(users.userId, userId)),
+        
+            db
+            .select()
+            .from(otps)
+            .where(eq(otps.userId, userId))
+        ])
+
+        if(!user) return
+        if(user.isVerified) return
+        if(existingRecord && existingRecord.expiresAt > new Date()) return
+
+        await db.transaction(async (tx) => {
+            const otp = generateOTP()
+
+            const newRecord: NewOTP = {
+                userId: userId,
+                otpHash: hashOTP(otp),
+                expiresAt: new Date(Date.now() + 5*60*1000)
+            }
+
+            await tx
+            .delete(otps)
+            .where(eq(otps.userId, userId))
+
+            await tx
+            .update(users)
+            .set({
+                phoneNo: data.phoneNo
+            })
+            .where(eq(users.userId, userId))
+
+            await tx
+            .insert(otps)
+            .values(newRecord)
+
+            sendOtp(data.phoneNo, otp)
+        })
+    },
+
+    async verifyPhoneNo(userId: number, data: verifyPhoneNoType) {
+        //check for the token in the database
+        const [tokenRecord] = await db
+        .select()
+        .from(otps)
+        .where((eq(otps.userId, userId)))
+
+        //if token doesn't exists throw error
+        if(!tokenRecord) {
+            throw new ApiError(403, "Access denied")
+        }
+
+        //if the token is expired throw error
+        if(tokenRecord.expiresAt < new Date()) {
+            // delete the expired token
+            await db
+            .delete(otps)
+            .where(eq(otps.tokenId, tokenRecord.tokenId))
+
+            throw new ApiError(400, "Token Expired. Please, re-request the verification")
+        }
+
+        if(tokenRecord.otpHash !== hashOTP(data.otp)) {
+            throw new ApiError(400, "Invalid OTP")
+        }
+
+        // update the user to verified
+        await db.transaction(async (tx) => {
+            tx
+            .update(users)
+            .set({
+                isVerified: true
+            })
+            .where(eq(users.userId, tokenRecord.userId)),
+
+            // delete the otp
+            await db
+            .delete(otps)
+            .where(eq(otps.userId, tokenRecord.userId))
+        })
     }
 }

@@ -11,4 +11,6 @@ router.post('/logout', authMiddleware, authController.logout)
 router.post('/refresh', authController.refreshToken)
 router.get('/my-account',authMiddleware, authController.getAccount)
 
+router.post('/request-verification', authMiddleware, authController.requestVerification)
+
 export default router

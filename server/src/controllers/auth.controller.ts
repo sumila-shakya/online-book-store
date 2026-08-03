@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { ApiError } from "../utils/apiError";
 import { ApiResponse } from "../utils/apiResponse";
 import { authServices } from "../services/auth.service";
-import { registrationSchema, loginSchema, googleCodeSchema, registrationType, loginType, googleCodeType } from "../validator/auth.validator";
+import { registrationSchema, loginSchema, googleCodeSchema, requestVerifcationSchema, verifyPhoneNoSchema, registrationType, loginType, googleCodeType, requestVerificationType, verifyPhoneNoType } from "../validator/auth.validator";
 import { COOKIES_OPTIONS } from "../utils/constants";
 import { jwtUtils } from "../utils/jwt";
 import { Payload } from "../@types/interface";
@@ -144,6 +144,50 @@ export const authController = {
             .json(new ApiResponse(200, userAccount))
         } catch(error) {
             next(error)
+        }
+    },
+
+    async requestVerification(req: Request, res: Response, next: NextFunction) {
+        try {
+            // get the user id
+            const userId = req.user?.userId
+
+            // if the userId is missing throw error
+            if(!userId) {
+                throw new ApiError(401, "Access Denied")
+            }
+
+            const data: requestVerificationType = requestVerifcationSchema.parse(req.body)
+
+            await authServices.requestVerification(userId, data)
+
+            res
+            .status(200)
+            .json(new ApiResponse(200, "Please check your phone number to get otp"))
+        } catch(error) {
+            next()
+        }
+    },
+
+    async verifyPhoneNo(req: Request, res: Response, next: NextFunction) {
+        try {
+            // get the user id
+            const userId = req.user?.userId
+
+            // if the userId is missing throw error
+            if(!userId) {
+                throw new ApiError(401, "Access Denied")
+            }
+
+            const data: verifyPhoneNoType = verifyPhoneNoSchema.parse(req.body)
+
+            await authServices.verifyPhoneNo(userId, data)
+
+            res
+            .status(200)
+            .json(new ApiResponse(200, "Your phone number is successfully verified"))
+        } catch(error) {
+            next()
         }
     }
 }

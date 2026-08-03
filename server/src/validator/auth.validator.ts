@@ -19,7 +19,8 @@ export const loginSchema = z.object({
 
 // PAYLOAD SCHEMA
 export const payloadSchema = z.object({
-    userId: z.coerce.number().positive()
+    userId: z.coerce.number().positive(),
+    isVerified: z.boolean()
 })
 
 // GOOGLE CODE SCHEMA
@@ -27,8 +28,26 @@ export const googleCodeSchema = z.object({
     credential: z.string()
 })
 
+export const requestVerifcationSchema = z.object({
+    phoneNo: z.string()
+    .trim()
+    .regex(/^(98|97)\d{8}$/, {
+      message: "Invalid Nepali phone number. Must be 10 digits starting with 98 or 97.",
+    })
+})
+
+export const verifyPhoneNoSchema = z.object({
+    otp: z.string()
+    .trim()
+    .regex(/^\d{6}$/, {
+      message: "Invalid OTP",
+    })
+})
+
 
 /* --------------------------------- VALIDATION TYPES --------------------------------- */
 export type registrationType = z.infer<typeof registrationSchema>
 export type loginType = z.infer<typeof loginSchema>
 export type googleCodeType = z.infer<typeof googleCodeSchema>
+export type requestVerificationType = z.infer<typeof requestVerifcationSchema>
+export type verifyPhoneNoType = z.infer<typeof verifyPhoneNoSchema>

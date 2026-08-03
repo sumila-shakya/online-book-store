@@ -1,4 +1,4 @@
-import { mysqlTable, serial, varchar, timestamp, mysqlEnum, bigint, index, decimal, check, text, smallint, unique } from "drizzle-orm/mysql-core";
+import { mysqlTable, serial, varchar, timestamp, mysqlEnum, bigint, index, decimal, check, text, smallint, unique, boolean } from "drizzle-orm/mysql-core";
 import { sql } from "drizzle-orm";
 import { AUTH_PROVIDER, LISTING_STATUS, BOOK_CONDITION, BOOKS_SOURCE, ORDER_STATUS } from "../utils/constants";
 
@@ -18,6 +18,8 @@ export const users = mysqlTable('users', {
     buyerReviewSum: bigint('buyer_review_sum', { mode: 'number', unsigned: true }).notNull().default(0),
     sellerReviewCount: bigint('seller_review_count', { mode: 'number', unsigned: true }).notNull().default(0),
     buyerReviewCount: bigint('buyer_review_count', { mode: 'number', unsigned: true }).notNull().default(0),
+    phoneNo: varchar('phone_no', { length: 13 }).unique(),
+    isVerified: boolean('is_verified').notNull().default(false),
     createdAt: timestamp('created_at', { mode: 'date' }).defaultNow(),
     updatedAt: timestamp('updated_at', { mode: 'date' }).defaultNow().onUpdateNow()
 })
@@ -89,6 +91,17 @@ export const reviews = mysqlTable('review', {
     }
 })
 
+// OTP SCHEMA
+export const otps = mysqlTable('otps', {
+    tokenId: serial('token_id').primaryKey(),
+    otpHash: varchar('otp', { length: 512 }).notNull(),
+    userId: bigint('user_id', { mode: 'number', unsigned: true }).notNull().references(() => users.userId, { onDelete: 'cascade', onUpdate: 'cascade' }),
+    createdAt: timestamp('created_at', { mode: 'date' }).defaultNow(),
+    expiresAt: timestamp('expires_at', { mode: 'date' }).notNull(),
+}, (table) => {
+    return { userIdIdx: index('user_id_idx').on(table.userId) }
+})
+
 
 /* ------------------------------------------ TYPE DEFINITIONS ------------------------------------------ */
 
@@ -115,3 +128,7 @@ export type NewOrder = typeof orders.$inferInsert
 // REVIEWS TYPE
 export type Review = typeof reviews.$inferSelect
 export type NewReview = typeof reviews.$inferInsert
+
+// OTP TYPE
+export type OTP = typeof otps.$inferSelect
+export type NewOTP = typeof otps.$inferInsert

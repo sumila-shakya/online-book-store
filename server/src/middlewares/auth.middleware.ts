@@ -21,7 +21,7 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
         const decoded: Payload = jwtUtils.verifyAccessToken(token)
 
         // set the request user field with payload data
-        req.user = { userId: decoded.userId }
+        req.user = { userId: decoded.userId, isVerified: decoded.isVerified }
         next()
     } catch(error) {
         next(error)
