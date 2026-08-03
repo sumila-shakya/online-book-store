@@ -1,6 +1,6 @@
 import { db } from "../config/mysql.config";
 import { users, booksCatalogue, booksListings } from "../models/mysql.model";
-import { eq, count, and, sql } from "drizzle-orm";
+import { eq, count, and, sql, desc, asc } from "drizzle-orm";
 import { ApiError } from "../utils/apiError";
 import { sellerListingFilterType } from "../validator/seller.validation";
 import { paginationType } from "../validator/global.validator";
@@ -55,6 +55,7 @@ export const sellerServices = {
             .from(booksListings)
             .innerJoin(booksCatalogue, eq(booksCatalogue.bookId, booksListings.bookId))
             .where(and(...queryFilters))
+            .orderBy(desc(booksListings.listedAt), asc(booksListings.listingId))
             .offset(offset)
             .limit(limit),
         
@@ -107,11 +108,13 @@ export const sellerServices = {
                 imageUrl: booksCatalogue.imageUrl,
                 price: booksListings.price,
                 bookCondition: booksListings.bookCondition,
+                listedAt: booksListings.listedAt,
                 listingStatus: booksListings.listingStatus,
             })
             .from(booksListings)
             .innerJoin(users, eq(users.userId, booksListings.sellerId))
             .innerJoin(booksCatalogue, eq(booksCatalogue.bookId, booksListings.bookId))
+            .orderBy(desc(booksListings.listedAt), asc(booksListings.listingId))
             .where(and(
                 eq(booksListings.sellerId, sellerId),
                 eq(booksListings.listingStatus,  'available')

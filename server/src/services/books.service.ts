@@ -1,6 +1,6 @@
 import { db } from "../config/mysql.config";
 import { booksListings, booksCatalogue, users, NewBook, NewListing } from "../models/mysql.model";
-import { eq, count, and, inArray, sql } from "drizzle-orm";
+import { eq, count, and, inArray, sql, desc, asc } from "drizzle-orm";
 import { ApiError } from "../utils/apiError"
 import { bookListingByIsbnType, bookFilterType } from "../validator/books.validator";
 import { googleBookServices } from "./googleBooks.service";
@@ -205,12 +205,14 @@ export const bookServices = {
                 imageUrl: booksCatalogue.imageUrl,
                 price: booksListings.price,
                 bookCondition: booksListings.bookCondition,
+                listedAt: booksListings.listedAt,
                 listingStatus: booksListings.listingStatus,
             })
             .from(booksListings)
             .innerJoin(users, eq(users.userId, booksListings.sellerId))
             .innerJoin(booksCatalogue, eq(booksCatalogue.bookId, booksListings.bookId))
             .where(and(...queryFilters))
+            .orderBy(desc(booksListings.listedAt), asc(booksListings.listingId))
             .offset(offset)
             .limit(limit),
 

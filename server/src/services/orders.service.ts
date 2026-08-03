@@ -1,7 +1,9 @@
 import { db } from "../config/mysql.config";
-import { users, booksListings, orders, NewOrder } from "../models/mysql.model";
-import { eq, and } from "drizzle-orm";
+import { users, booksListings, orders, booksCatalogue, NewOrder } from "../models/mysql.model";
+import { eq, and, desc, asc, count, SQL } from "drizzle-orm";
 import { ApiError } from "../utils/apiError";
+import { orderFilterType } from "../validator/orders.validator";
+import { DEFAULT_PAGE_LIMIT } from "../utils/constants";
 
 export const ordersServices = {
     async placeOrder(userId: number, listingId: number) {
@@ -143,5 +145,159 @@ export const ordersServices = {
             })
             .where(eq(booksListings.listingId, existingOrder.listingId))
         })
+    },
+
+    async viewPurchaseOrder(userId: number, filters: orderFilterType) {
+        // get the pagination data
+        const page = filters.page || 1
+        const limit = filters.limit || DEFAULT_PAGE_LIMIT
+        const offset = (page - 1)*limit
+                
+        const queryFilters = [eq(orders.buyerId, userId)]
+
+        if(filters.orderStatus) {
+            queryFilters.push(eq(orders.orderStatus, filters.orderStatus))
+        }
+
+        const [purchaseOrders, [orderCount]] = await Promise.all([
+            db
+            .select({
+                orderId: orders.orderId,
+                orderStatus: orders.orderStatus,
+                orderedAt: orders.orderedAt,
+                listingId: orders.listingId,
+                title: booksCatalogue.title,
+                imageUrl: booksCatalogue.imageUrl,
+                price: booksListings.price,
+                sellerId: orders.sellerId,
+                sellerName: users.name
+            })
+            .from(orders)
+            .innerJoin(users, eq(users.userId, orders.sellerId))
+            .innerJoin(booksListings, eq(booksListings.listingId, orders.listingId))
+            .innerJoin(booksCatalogue, eq(booksCatalogue.bookId, booksListings.bookId))
+            .where(and(...queryFilters))
+            .orderBy(desc(orders.orderedAt), asc(orders.orderId))
+            .limit(limit)
+            .offset(offset),
+
+            db
+            .select({
+                total: count()
+            })
+            .from(orders)
+            .where(and(...queryFilters))
+        ])
+
+        return {
+            paginationInfo: {
+                totalBooksCount: orderCount.total,
+                totalPages: Math.ceil(orderCount.total/limit),
+                page: page,
+                limit: limit
+            },
+            purchaseOrders
+        }
+    },
+
+    async viewSalesOrder(userId: number, filters: orderFilterType) {
+        // get the pagination data
+        const page = filters.page || 1
+        const limit = filters.limit || DEFAULT_PAGE_LIMIT
+        const offset = (page - 1)*limit
+                
+        const queryFilters = [eq(orders.sellerId, userId)]
+
+        if(filters.orderStatus) {
+            queryFilters.push(eq(orders.orderStatus, filters.orderStatus))
+        }
+
+        const [salesOrders, [orderCount]] = await Promise.all([
+            db
+            .select({
+                orderId: orders.orderId,
+                orderStatus: orders.orderStatus,
+                orderedAt: orders.orderedAt,
+                listingId: orders.listingId,
+                title: booksCatalogue.title,
+                imageUrl: booksCatalogue.imageUrl,
+                price: booksListings.price,
+                buyerId: orders.sellerId,
+                buyerName: users.name
+            })
+            .from(orders)
+            .innerJoin(users, eq(users.userId, orders.buyerId))
+            .innerJoin(booksListings, eq(booksListings.listingId, orders.listingId))
+            .innerJoin(booksCatalogue, eq(booksCatalogue.bookId, booksListings.bookId))
+            .where(and(...queryFilters))
+            .orderBy(desc(orders.orderedAt), asc(orders.orderId))
+            .limit(limit)
+            .offset(offset),
+
+            db
+            .select({
+                total: count()
+            })
+            .from(orders)
+            .where(and(...queryFilters))
+        ])
+
+        return {
+            paginationInfo: {
+                totalBooksCount: orderCount.total,
+                totalPages: Math.ceil(orderCount.total/limit),
+                page: page,
+                limit: limit
+            },
+            salesOrders
+        }
+    },
+
+    async viewOrderDetails(userId: number, orderId: number) {
+        const [existingOrder] = await db
+        .select()
+        .from(orders)
+        .where(eq(orders.orderId, orderId))
+
+        if(!existingOrder) {
+            throw new ApiError(404, "Order not found")
+        }
+
+        if(userId !== existingOrder.buyerId && userId !== existingOrder.sellerId) {
+            throw new ApiError(403, "Access Denied")
+        }
+
+        const joinCondition: SQL = userId === existingOrder.buyerId ? eq(users.userId, orders.sellerId) : eq(users.userId, orders.buyerId)
+
+        const [orderDetails] = await db
+        .select({
+            orderId: orders.orderId,
+            orderedAt: orders.orderedAt,
+            orderStatus: orders.orderStatus,
+            myConfirmation: userId === existingOrder.buyerId ? orders.buyerVerifiedAt : orders.sellerVerifiedAt,
+            counterPartyConfirmation: userId === existingOrder.buyerId ? orders.sellerVerifiedAt : orders.buyerVerifiedAt,
+            counterParty: {
+                userId: users.userId,
+                name: users.name,
+                userRating: userId === existingOrder.buyerId ? users.avgSellerRating : users.avgBuyerRating
+            },
+            bookInfo: {
+                bookId: booksCatalogue.bookId,
+                title: booksCatalogue.title,
+                imageUrl: booksCatalogue.imageUrl
+            },
+            price: booksListings.price,
+            bookCondition: booksListings.bookCondition
+        })
+        .from(orders)
+        .innerJoin(users, joinCondition)
+        .innerJoin(booksListings, eq(booksListings.listingId, orders.listingId))
+        .innerJoin(booksCatalogue, eq(booksCatalogue.bookId, booksListings.bookId))
+        .where(eq(orders.orderId, orderId))
+
+        return {
+            userRole: userId === existingOrder.buyerId ? 'buyer' : 'seller',
+            ...orderDetails
+        }
     }
 }
