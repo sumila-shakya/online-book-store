@@ -1,5 +1,6 @@
 export const DEFAULT_PAGE_LIMIT = 5
 export const THRESHOLD_FREQUENCY = 10
+export const GRACE_PERIOD = 15
 export const AUTH_PROVIDER = ['local', 'google'] as const
 export const BOOKS_SOURCE = ['manual', 'google'] as const
 export const LISTING_STATUS = ['available', 'reserved', 'sold'] as const

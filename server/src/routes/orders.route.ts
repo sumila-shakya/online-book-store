@@ -13,6 +13,7 @@ router.post('/:orderId/seller-confirm', ordersController.confirmOrderBySeller)
 
 router.get('/purchase', ordersController.viewPurchaseOrders)
 router.get('/sales', ordersController.viewSalesOrders)
+router.get('/:orderId', ordersController.viewOrderDetails)
 
 router.post('/:orderId/review-buyer', reviewController.reviewBuyer)
 router.post('/:orderId/review-seller', reviewController.reviewSeller)

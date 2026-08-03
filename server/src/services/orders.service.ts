@@ -1,9 +1,9 @@
 import { db } from "../config/mysql.config";
 import { users, booksListings, orders, booksCatalogue, NewOrder } from "../models/mysql.model";
-import { eq, and, desc, asc, count, SQL } from "drizzle-orm";
+import { eq, and, desc, asc, count, SQL, lt, inArray } from "drizzle-orm";
 import { ApiError } from "../utils/apiError";
 import { orderFilterType } from "../validator/orders.validator";
-import { DEFAULT_PAGE_LIMIT } from "../utils/constants";
+import { DEFAULT_PAGE_LIMIT, GRACE_PERIOD } from "../utils/constants";
 
 export const ordersServices = {
     async placeOrder(userId: number, listingId: number) {
@@ -299,5 +299,40 @@ export const ordersServices = {
             userRole: userId === existingOrder.buyerId ? 'buyer' : 'seller',
             ...orderDetails
         }
+    },
+
+    async updateFailedOrders() {
+        const gracePeriodCutOff = new Date()
+        gracePeriodCutOff.setDate(gracePeriodCutOff.getDate() - GRACE_PERIOD)
+
+        await db.transaction(async (tx) => {
+            // get the failed orders
+            const failedOrders = await tx
+            .select()
+            .from(orders)
+            .where(and(
+                eq(orders.orderStatus, 'pending'),
+                lt(orders.orderedAt, gracePeriodCutOff)
+            ))
+
+            if(failedOrders.length > 0) {
+                const failedOrdersIds = failedOrders.map((order) => order.orderId )
+                const listingIds = failedOrders.map((order) => order.listingId)
+
+                await tx
+                .update(orders)
+                .set({
+                    orderStatus: 'failed'
+                })
+                .where(inArray(orders.orderId, failedOrdersIds))
+
+                await tx
+                .update(booksListings)
+                .set({
+                    listingStatus: 'available'
+                })
+                .where(inArray(booksListings.listingId, listingIds))
+            } 
+        })
     }
 }

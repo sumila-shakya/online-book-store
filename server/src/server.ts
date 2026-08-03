@@ -2,6 +2,7 @@ import 'dotenv/config'
 import { exit } from 'node:process'
 import { app } from './app'
 import { db } from './config/mysql.config'
+import { failedOrdersCron } from './cron/orders.cron'
 
 const PORT = process.env.PORT || 3000
 
@@ -12,6 +13,10 @@ const startServer = async() => {
         //testing mysql connection
         await db.execute('SELECT 1')
         console.log("MySQL connected !!")
+
+        // cron job initialization
+        console.log("Checking for failed orders")
+        failedOrdersCron()
 
         //server listening at port 3000
         app.listen(PORT, ()=>{
