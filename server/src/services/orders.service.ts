@@ -1,9 +1,10 @@
 import { db } from "../config/mysql.config";
-import { users, booksListings, orders, booksCatalogue, NewOrder } from "../models/mysql.model";
+import { users, booksListings, orders, booksCatalogue, NewOrder, Order } from "../models/mysql.model";
 import { eq, and, desc, asc, count, SQL, lt, inArray } from "drizzle-orm";
 import { ApiError } from "../utils/apiError";
 import { orderFilterType } from "../validator/orders.validator";
 import { DEFAULT_PAGE_LIMIT, GRACE_PERIOD } from "../utils/constants";
+import { PaginationMetaData } from "../@types/interface";
 
 export const ordersServices = {
     async placeOrder(userId: number, listingId: number) {
@@ -17,7 +18,7 @@ export const ordersServices = {
         }
 
         if(existingListing.listingStatus !== 'available') {
-            throw new ApiError(4049, 'Book not available')
+            throw new ApiError(409, 'Book not available')
         }
 
         if(existingListing.sellerId === userId) {
@@ -42,7 +43,7 @@ export const ordersServices = {
             })
             .where(eq(booksListings.listingId, listingId))
 
-            const [order] = await tx
+            const [order]: Order[] = await tx
             .select()
             .from(orders)
             .where(eq(orders.orderId, result.insertId))
@@ -170,7 +171,8 @@ export const ordersServices = {
                 imageUrl: booksCatalogue.imageUrl,
                 price: booksListings.price,
                 sellerId: orders.sellerId,
-                sellerName: users.name
+                sellerName: users.name,
+                sellerRating: users.avgSellerRating
             })
             .from(orders)
             .innerJoin(users, eq(users.userId, orders.sellerId))
@@ -189,13 +191,15 @@ export const ordersServices = {
             .where(and(...queryFilters))
         ])
 
+        const paginationInfo:PaginationMetaData =  {
+            totalBooksCount: orderCount.total,
+            totalPages: Math.ceil(orderCount.total/limit),
+            page: page,
+            limit: limit
+        }
+
         return {
-            paginationInfo: {
-                totalBooksCount: orderCount.total,
-                totalPages: Math.ceil(orderCount.total/limit),
-                page: page,
-                limit: limit
-            },
+            paginationInfo,
             purchaseOrders
         }
     },
@@ -223,7 +227,8 @@ export const ordersServices = {
                 imageUrl: booksCatalogue.imageUrl,
                 price: booksListings.price,
                 buyerId: orders.sellerId,
-                buyerName: users.name
+                buyerName: users.name,
+                buyerRating: users.avgBuyerRating
             })
             .from(orders)
             .innerJoin(users, eq(users.userId, orders.buyerId))
@@ -242,13 +247,15 @@ export const ordersServices = {
             .where(and(...queryFilters))
         ])
 
+        const paginationInfo:PaginationMetaData = {
+            totalBooksCount: orderCount.total,
+            totalPages: Math.ceil(orderCount.total/limit),
+            page: page,
+            limit: limit
+        }
+
         return {
-            paginationInfo: {
-                totalBooksCount: orderCount.total,
-                totalPages: Math.ceil(orderCount.total/limit),
-                page: page,
-                limit: limit
-            },
+            paginationInfo,
             salesOrders
         }
     },

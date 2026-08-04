@@ -4,7 +4,9 @@ import { z } from 'zod'
 export const registrationSchema = z.object({
     name: z.string().min(2, { message: "Name must be atleast two charaters long" }).trim(),
     email: z.string().email({ message: "Invalid email format" }),
-    password: z.string().min(8, { message:"Password must be atleast 8 characters long" })
+    password: z.string()
+    .min(8, { message:"Password must be atleast 8 characters long" })
+    .max(128, { message:"Password is too long"} )
     .regex(/[A-Z]/, { message:"Password must contain at least one uppercase letter" })
     .regex(/[a-z]/, { message:"Password must contain at least one lowercase letter" })
     .regex(/[0-9]/, { message:"Password must contain at least one digit" })
@@ -28,7 +30,7 @@ export const googleCodeSchema = z.object({
     credential: z.string()
 })
 
-export const requestVerifcationSchema = z.object({
+export const requestVerificationSchema = z.object({
     phoneNo: z.string()
     .trim()
     .regex(/^(98|97)\d{8}$/, {
@@ -49,5 +51,5 @@ export const verifyPhoneNoSchema = z.object({
 export type registrationType = z.infer<typeof registrationSchema>
 export type loginType = z.infer<typeof loginSchema>
 export type googleCodeType = z.infer<typeof googleCodeSchema>
-export type requestVerificationType = z.infer<typeof requestVerifcationSchema>
+export type requestVerificationType = z.infer<typeof requestVerificationSchema>
 export type verifyPhoneNoType = z.infer<typeof verifyPhoneNoSchema>

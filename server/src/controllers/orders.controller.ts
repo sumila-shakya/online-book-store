@@ -4,6 +4,7 @@ import { ApiResponse } from "../utils/apiResponse";
 import { parseId } from "../utils/parser";
 import { ordersServices } from "../services/orders.service";
 import { orderFilterSchema, orderFilterType } from "../validator/orders.validator";
+import { Order } from "../models/mysql.model";
 
 export const ordersController = {
     async placeOrder(req: Request, res: Response, next: NextFunction) {
@@ -19,7 +20,7 @@ export const ordersController = {
             // parse the task id
             const listingId = parseId(req.params.listingId as string)
 
-            const newOrder = await ordersServices.placeOrder(userId, listingId)
+            const newOrder: Order = await ordersServices.placeOrder(userId, listingId)
 
             res
             .status(201)
@@ -92,7 +93,7 @@ export const ordersController = {
 
             res
             .status(200)
-            .json(new ApiResponse(200, {}, "Buyer confirmation received successfully"))
+            .json(new ApiResponse(200, {}, "Seller confirmation received successfully"))
         } catch(error) {
             next(error)
         }

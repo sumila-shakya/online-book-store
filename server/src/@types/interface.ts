@@ -22,3 +22,10 @@ export interface BookInformation {
     categories?: string[],
     language?: string
 }
+
+export interface PaginationMetaData {
+    totalBooksCount: number,
+    totalPages: number,
+    page: number,
+    limit: number
+}

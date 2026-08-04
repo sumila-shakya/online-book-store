@@ -2,7 +2,9 @@ import { z } from 'zod'
 import { BOOK_CONDITION, DEFAULT_PAGE_LIMIT } from '../utils/constants'
 
 export const bookListingByIsbnSchema = z.object({
-    isbn: z.string().max(20, {message: "isbn number too long"}),
+    isbn: z.string()
+    .min(10, {message: "isbn number too short"})
+    .max(20, {message: "isbn number too long"}),
     price: z.coerce.number().min(0, {message: "price cannot be negative"}),
     bookCondition: z.enum(BOOK_CONDITION, {message: "Invalid Condition"}),
 })

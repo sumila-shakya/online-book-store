@@ -2,7 +2,8 @@ import { Request, Response, NextFunction } from "express";
 import { ApiError } from "../utils/apiError";
 import { ApiResponse } from "../utils/apiResponse";
 import { authServices } from "../services/auth.service";
-import { registrationSchema, loginSchema, googleCodeSchema, requestVerifcationSchema, verifyPhoneNoSchema, registrationType, loginType, googleCodeType, requestVerificationType, verifyPhoneNoType } from "../validator/auth.validator";
+import { registrationSchema, loginSchema, googleCodeSchema, requestVerificationSchema, verifyPhoneNoSchema, 
+        registrationType, loginType, googleCodeType, requestVerificationType, verifyPhoneNoType } from "../validator/auth.validator";
 import { COOKIES_OPTIONS } from "../utils/constants";
 import { jwtUtils } from "../utils/jwt";
 import { Payload } from "../@types/interface";
@@ -66,7 +67,7 @@ export const authController = {
             // cookies option
             const options = {
                 httpOnly: true,
-                sameSite: "strict" as const
+                sameSite: "lax" as const
             }
 
             // send 200 successfully login message
@@ -157,7 +158,7 @@ export const authController = {
                 throw new ApiError(401, "Access Denied")
             }
 
-            const data: requestVerificationType = requestVerifcationSchema.parse(req.body)
+            const data: requestVerificationType = requestVerificationSchema.parse(req.body)
 
             await authServices.requestVerification(userId, data)
 

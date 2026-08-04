@@ -44,6 +44,8 @@ export const booksCatalogue = mysqlTable('books_catalogue', {
     authors: varchar('author', { length: 500 }),
     imageUrl: varchar('image_url', { length: 500 }),
     bookSource: mysqlEnum('book_source', BOOKS_SOURCE).notNull()
+}, (table) => {
+    return { isbnIdx: index('isbn_idx').on(table.isbn) }
 })
 
 // BOOK LISTING SCHEMA
@@ -86,6 +88,7 @@ export const reviews = mysqlTable('review', {
 }, (table) => {
     return { 
         ratingCheck: check('rating_chk', sql`${table.rating} BETWEEN 1 AND 5`),
+        ratingIdx: index('rating_idx').on(table.rating),
         uniqueReviewer: unique('unique_reviewer').on(table.orderId, table.reviewerId),
         uniqueReviewee: unique('unique_reviewee').on(table.orderId, table.revieweeId)
     }

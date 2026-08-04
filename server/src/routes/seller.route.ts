@@ -5,8 +5,8 @@ import { requirePhoneVerified } from "../middlewares/phone.middleware";
 
 const router = Router()
 
-router.use('/my-list', authMiddleware, requirePhoneVerified, sellerController.viewMyListings)
-router.use('/:sellerId', sellerController.viewSellerListings)
+router.get('/my-list', authMiddleware, requirePhoneVerified, sellerController.viewMyListings)
+router.get('/:sellerId', sellerController.viewSellerListings)
 
 export default router
 

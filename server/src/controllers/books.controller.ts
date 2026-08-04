@@ -5,6 +5,7 @@ import { bookServices } from "../services/books.service";
 import { bookListingByIsbnSchema, bookListingManuallySchema, bookFilterSchema, bookListingByIsbnType, bookListingManuallyType, bookFilterType } from "../validator/books.validator";
 import { parseId } from "../utils/parser";
 import { ManualBookUpload } from "../@types/interface";
+import { Listing } from "../models/mysql.model";
 import fs from 'fs'
 
 export const bookController = {
@@ -22,7 +23,7 @@ export const bookController = {
             const data: bookListingByIsbnType = bookListingByIsbnSchema.parse(req.body)
 
             // get the result
-            const result = await bookServices.listBookByIsbn(userId, data)
+            const result: Listing = await bookServices.listBookByIsbn(userId, data)
 
             // send 201 success msg
             res
@@ -50,7 +51,7 @@ export const bookController = {
                 data.localFilePath = req.file.path
             }
 
-            const result = await bookServices.listBookManually(userId, data)
+            const result: Listing = await bookServices.listBookManually(userId, data)
 
             res
             .status(201)

@@ -1,13 +1,13 @@
 import { db } from "../config/mysql.config";
-import { booksListings, booksCatalogue, users, NewBook, NewListing } from "../models/mysql.model";
-import { eq, count, and, inArray, sql, desc, asc } from "drizzle-orm";
+import { booksListings, booksCatalogue, users, NewBook, NewListing, Listing } from "../models/mysql.model";
+import { eq, count, and, sql, desc, asc } from "drizzle-orm";
 import { ApiError } from "../utils/apiError"
 import { bookListingByIsbnType, bookFilterType } from "../validator/books.validator";
 import { googleBookServices } from "./googleBooks.service";
 import { googleBookVolumeType, volumeInfoType } from "../validator/volumes.validator";
-import { DEFAULT_PAGE_LIMIT, LISTING_STATUS } from "../utils/constants";
+import { DEFAULT_PAGE_LIMIT } from "../utils/constants";
 import { uploadOnCloudinary } from "../utils/cloudinary";
-import { ManualBookUpload, BookInformation } from "../@types/interface";
+import { ManualBookUpload, BookInformation, PaginationMetaData } from "../@types/interface";
 import { parseISBN } from "../utils/parser";
 
 export const bookServices = {
@@ -19,33 +19,47 @@ export const bookServices = {
             throw new ApiError(400, "Invalid ISBN")
         }
 
-        const items: googleBookVolumeType[] = await googleBookServices.getBooksByISBN(cleanedISBN)
-        
-        if(items.length <= 0) {
-            throw new ApiError(500, "Sorry, book can't be found!!")
-        }
+        const [existingBook] = await db
+        .select()
+        .from(booksCatalogue)
+        .where(eq(booksCatalogue.isbn, cleanedISBN))
 
-        const bookVolume: volumeInfoType = items[0].volumeInfo
-        const imageUrl = bookVolume.imageLinks?.thumbnail ??
+        let bookId: number
+
+        if(existingBook) {
+            bookId = existingBook.bookId
+        } 
+        else {
+            const items: googleBookVolumeType[] = await googleBookServices.getBooksByISBN(cleanedISBN)
+        
+            if(items.length <= 0) {
+                throw new ApiError(500, "Sorry, book can't be found!!")
+            }
+
+            const bookVolume: volumeInfoType = items[0].volumeInfo
+            const imageUrl = bookVolume.imageLinks?.thumbnail ??
                         bookVolume.imageLinks?.smallThumbnail ??
                         bookVolume.imageLinks?.small ?? null
 
-        const newBook: NewBook = {
-            title: bookVolume.title,
-            bookSource:'google',
-            isbn: cleanedISBN, // can be either isbn 10 or isbn 13
-            ...(bookVolume.description && {description:bookVolume.description}),
-            ...(bookVolume.authors && {authors: bookVolume.authors.join(";")}),
-            ...(imageUrl && {imageUrl: imageUrl})
-        }
+            const newBook: NewBook = {
+                title: bookVolume.title,
+                bookSource:'google',
+                isbn: cleanedISBN, // can be either isbn 10 or isbn 13
+                ...(bookVolume.description && {description:bookVolume.description}),
+                ...(bookVolume.authors && {authors: bookVolume.authors.join(";")}),
+                ...(imageUrl && {imageUrl: imageUrl})
+            }
 
-        const [book] = await db
-        .insert(booksCatalogue)
-        .values(newBook) 
+            const [book] = await db
+            .insert(booksCatalogue)
+            .values(newBook)
+            
+            bookId = book.insertId
+        }
 
         const newListing: NewListing = {
             sellerId: userId,
-            bookId: book.insertId,
+            bookId: bookId,
             bookCondition: data.bookCondition,
             price: data.price
         }
@@ -54,7 +68,7 @@ export const bookServices = {
         .insert(booksListings)
         .values(newListing)
 
-        const [userListing] = await db
+        const [userListing]: Listing[] = await db
         .select()
         .from(booksListings)
         .where(eq(booksListings.listingId, result.insertId))
@@ -96,7 +110,7 @@ export const bookServices = {
         .insert(booksListings)
         .values(newListing)
 
-        const [userListing] = await db
+        const [userListing]: Listing[] = await db
         .select()
         .from(booksListings)
         .where(eq(booksListings.listingId, result.insertId))
@@ -163,7 +177,9 @@ export const bookServices = {
             sellerInfo:{
                 sellerId: bookListing.sellerId,
                 sellerName: bookListing.sellerName,
-                sellerRating: bookListing.sellerRating
+                sellerRating: bookListing.sellerRating,
+                phoneNo: bookListing.phoneNo,
+                isVerified: bookListing.isVerified
             },
             bookInfo: bookInfo,
             price: bookListing.price,
@@ -189,8 +205,7 @@ export const bookServices = {
             }
             else{
                 queryFilters.push(sql`
-                    MATCH(${booksCatalogue.title}, ${booksCatalogue.authors}, ${booksCatalogue.description}) AGAINST (${filters.q.trim()} IN NATURAL LANGUAGE MODE) 
-	                AND ${booksListings.listingStatus}=${LISTING_STATUS[0]}
+                    MATCH(${booksCatalogue.title}, ${booksCatalogue.authors}, ${booksCatalogue.description}) AGAINST (${filters.q.trim()} IN NATURAL LANGUAGE MODE)
                 `)
             }
         }
@@ -227,13 +242,15 @@ export const bookServices = {
             .where(and(...queryFilters))
         ])
 
+        const paginationInfo: PaginationMetaData  = {
+            totalBooksCount: booksCount.total,
+            totalPages: Math.ceil(booksCount.total/limit),
+            page: page,
+            limit: limit
+        }
+
         return {
-            paginationInfo: {
-                totalBooksCount: booksCount.total,
-                totalPages: Math.ceil(booksCount.total/limit),
-                page: page,
-                limit: limit
-            },
+            paginationInfo,
             listings
         }
     }

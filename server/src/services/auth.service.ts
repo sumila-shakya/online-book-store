@@ -215,6 +215,8 @@ export const authServices = {
             eq(users.authProvider, 'google')
         ))
 
+        userId = existingUser.userId
+
         if(!existingUser) {
             const newUser: NewUser = {
                 email: data.email,
@@ -231,8 +233,6 @@ export const authServices = {
             userId = result.insertId
 
         }
-
-        userId = existingUser.userId
 
         const payload: Payload = {
             userId: userId,
@@ -299,8 +299,14 @@ export const authServices = {
             .where(eq(otps.userId, userId))
         ])
 
-        if(!user) return
-        if(user.isVerified) return
+        if(!user) {
+            throw new ApiError(404, "User not found")
+        }
+
+        if(user.isVerified && user.phoneNo === data.phoneNo) {
+            throw new ApiError(400, "This number is already verified")
+        }
+
         if(existingRecord && existingRecord.expiresAt > new Date()) return
 
         await db.transaction(async (tx) => {
@@ -350,7 +356,7 @@ export const authServices = {
             .delete(otps)
             .where(eq(otps.tokenId, tokenRecord.tokenId))
 
-            throw new ApiError(400, "Token Expired. Please, re-request the verification")
+            throw new ApiError(400, "OTP Expired. Please, re-request the verification")
         }
 
         if(tokenRecord.otpHash !== hashOTP(data.otp)) {

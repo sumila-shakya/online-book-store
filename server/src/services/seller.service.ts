@@ -5,6 +5,7 @@ import { ApiError } from "../utils/apiError";
 import { sellerListingFilterType } from "../validator/seller.validation";
 import { paginationType } from "../validator/global.validator";
 import { DEFAULT_PAGE_LIMIT, LISTING_STATUS } from "../utils/constants";
+import { PaginationMetaData } from "../@types/interface";
 
 export const sellerServices = {
     async viewMyListings(userId: number, data: sellerListingFilterType) {
@@ -24,7 +25,9 @@ export const sellerServices = {
                 sellerId: users.userId,
                 sellerName: users.name,
                 avgSellerRating: users.avgSellerRating,
-                sellerReviewCount: users.sellerReviewCount
+                sellerReviewCount: users.sellerReviewCount,
+                phoneNo: users.phoneNo,
+                isVerified: users.isVerified
             })
             .from(users)
             .where(eq(users.userId, userId))
@@ -68,13 +71,15 @@ export const sellerServices = {
             .where(and(...queryFilters))
         ])
 
+        const paginationInfo: PaginationMetaData = {
+            totalBooksCount: listingCount.total,
+            totalPages: Math.ceil(listingCount.total/limit),
+            page: page,
+            limit: limit
+        }
+
         return {
-            paginationInfo: {
-                totalBooksCount: listingCount.total,
-                totalPages: Math.ceil(listingCount.total/limit),
-                page: page,
-                limit: limit
-            },
+            paginationInfo,
             sellerInfo,
             summary,
             listings
@@ -101,10 +106,6 @@ export const sellerServices = {
             .select({
                 listingId: booksListings.listingId,
                 sellerId: booksListings.sellerId,
-                sellerName: users.name,
-                sellerRating: users.avgSellerRating,
-                phoneNo: users.phoneNo,
-                isVerified: users.isVerified,
                 bookId:booksListings.bookId,
                 title: booksCatalogue.title,
                 imageUrl: booksCatalogue.imageUrl,
@@ -114,7 +115,6 @@ export const sellerServices = {
                 listingStatus: booksListings.listingStatus,
             })
             .from(booksListings)
-            .innerJoin(users, eq(users.userId, booksListings.sellerId))
             .innerJoin(booksCatalogue, eq(booksCatalogue.bookId, booksListings.bookId))
             .orderBy(desc(booksListings.listedAt), asc(booksListings.listingId))
             .where(and(
@@ -136,12 +136,21 @@ export const sellerServices = {
             ))
         ])
 
+        const paginationInfo: PaginationMetaData = {
+            totalBooksCount: booksCount.total,
+            totalPages: Math.ceil(booksCount.total/limit),
+            page: page,
+            limit: limit
+        }
+
         return {
-            paginationInfo: {
-                totalBooksCount: booksCount.total,
-                totalPages: Math.ceil(booksCount.total/limit),
-                page: page,
-                limit: limit
+            paginationInfo,
+            sellerInfo: {
+                sellerId: existingSeller.userId,
+                name: existingSeller.name,
+                sellerRating: existingSeller.avgSellerRating,
+                phoneNo: existingSeller.phoneNo,
+                isverified: existingSeller.isVerified
             },
             listings
         }
