@@ -1,6 +1,6 @@
 import { db } from "../config/mysql.config";
 import { users, refreshTokens, otps, User, NewUser, NewToken, NewOTP } from "../models/mysql.model";
-import { eq, and } from "drizzle-orm";
+import { eq, and, ne } from "drizzle-orm";
 import { ApiError } from "../utils/apiError";
 import { registrationType, loginType, requestVerificationType, verifyPhoneNoType } from "../validator/auth.validator";
 import { jwtUtils } from "../utils/jwt";
@@ -215,9 +215,9 @@ export const authServices = {
             eq(users.authProvider, 'google')
         ))
 
-        userId = existingUser.userId
-
-        if(!existingUser) {
+        if(existingUser) {
+            userId = existingUser.userId
+        } else {
             const newUser: NewUser = {
                 email: data.email,
                 name: data.name,
@@ -231,7 +231,6 @@ export const authServices = {
             .values(newUser)
 
             userId = result.insertId
-
         }
 
         const payload: Payload = {
@@ -287,7 +286,7 @@ export const authServices = {
     },
 
     async requestVerification(userId: number, data: requestVerificationType) {
-        const [[user], [existingRecord]] = await Promise.all([
+        const [[user], [existingRecord], [existingPhoneNo]] = await Promise.all([
             db
             .select()
             .from(users)
@@ -296,7 +295,16 @@ export const authServices = {
             db
             .select()
             .from(otps)
-            .where(eq(otps.userId, userId))
+            .where(eq(otps.userId, userId)),
+
+            db
+            .select()
+            .from(users)
+            .where(and(
+                eq(users.phoneNo, data.phoneNo),
+                ne(users.userId, userId),
+                eq(users.isVerified, true)
+            ))
         ])
 
         if(!user) {
@@ -305,6 +313,10 @@ export const authServices = {
 
         if(user.isVerified && user.phoneNo === data.phoneNo) {
             throw new ApiError(400, "This number is already verified")
+        }
+
+        if(existingPhoneNo) {
+            throw new ApiError(400, "Unable to send verification code. Please check the phone number.")
         }
 
         if(existingRecord && existingRecord.expiresAt > new Date()) return
@@ -339,10 +351,21 @@ export const authServices = {
 
     async verifyPhoneNo(userId: number, data: verifyPhoneNoType) {
         //check for the token in the database
-        const [tokenRecord] = await db
-        .select()
-        .from(otps)
-        .where((eq(otps.userId, userId)))
+        const [[user],[tokenRecord]] = await Promise.all([
+            db
+            .select()
+            .from(users)
+            .where(eq(users.userId, userId)),
+
+            db
+            .select()
+            .from(otps)
+            .where((eq(otps.userId, userId)))
+        ])
+
+        if(user.isVerified) {
+            throw new ApiError(400, "User already verified")
+        }
 
         //if token doesn't exists throw error
         if(!tokenRecord) {
@@ -364,18 +387,55 @@ export const authServices = {
         }
 
         // update the user to verified
-        await db.transaction(async (tx) => {
-            tx
+        return await db.transaction(async (tx) => {
+            await tx
             .update(users)
             .set({
                 isVerified: true
             })
-            .where(eq(users.userId, tokenRecord.userId)),
+            .where(eq(users.userId, userId)),
 
             // delete the otp
             await db
             .delete(otps)
             .where(eq(otps.userId, tokenRecord.userId))
+
+            const [updatedUser] = await tx
+            .select()
+            .from(users)
+            .where(eq(users.userId, userId))
+
+            const payload: Payload = {
+                userId: userId,
+                isVerified: updatedUser.isVerified
+            }
+
+            // generate the new access and refresh tokens
+            const accessToken: string = jwtUtils.generateAccessToken(payload)
+            const refreshToken: string = jwtUtils.generateRefreshToken(payload)
+            const expiryDate: Date = jwtUtils.getExpiryDate()
+
+            // delete the old token (token rotation)
+            await tx
+            .delete(refreshTokens)
+            .where(eq(refreshTokens.tokenId, tokenRecord.tokenId))
+
+            const newToken: NewToken = {
+                userId: userId,
+                token: refreshToken,
+                expiresAt: expiryDate
+            }
+
+            // insert the new token
+            await tx
+            .insert(refreshTokens)
+            .values(newToken)
+        
+            // return new refresh token and access token
+            return {
+                accessToken,
+                refreshToken
+            }
         })
     }
 }

@@ -8,7 +8,7 @@ http:
   url: http://localhost:3000/api/books/2/place-order
   auth:
     type: bearer
-    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsImlhdCI6MTc4NTY0ODcwNywiZXhwIjoxNzg1NjUwNTA3fQ.eEaE3PAG66TiZ4nDoaIBkDh92q0jLva-DCdjZnegG_M
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsImlzVmVyaWZpZWQiOnRydWUsImlhdCI6MTc4NTk0Mzc3MCwiZXhwIjoxNzg1OTQ1NTcwfQ.t1vp5M-ILJxKI4cUnkQxc6hsmsf45cM79ofzS-7yQT4
 
 settings:
   encodeUrl: true

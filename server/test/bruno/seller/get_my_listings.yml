@@ -12,7 +12,7 @@ http:
       type: query
   auth:
     type: bearer
-    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlhdCI6MTc4NTU1NTI3MCwiZXhwIjoxNzg1NTU3MDcwfQ.DFiT_RFin_kdE6e-Y0S96DqJ2H1ZLEHufwiV1n2hT6I
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlzVmVyaWZpZWQiOnRydWUsImlhdCI6MTc4NTk0MDEwMywiZXhwIjoxNzg1OTQxOTAzfQ.3NUgXsNNGkSgBQsIUkDDXZPjLbEx0TNRUBJwY3kNQaY
 
 settings:
   encodeUrl: true

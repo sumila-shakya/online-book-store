@@ -27,7 +27,7 @@ export const reviewController = {
             .status(201)
             .json(new ApiResponse(201, {}, "Buyer reviewed successfully"))
         } catch(error) {
-
+            next(error)
         }
     },
 
@@ -52,7 +52,7 @@ export const reviewController = {
             .status(201)
             .json(new ApiResponse(201, {}, "Seller reviewed successfully"))
         } catch(error) {
-            
+            next(error)
         }
     }
 }

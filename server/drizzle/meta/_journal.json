@@ -29,6 +29,13 @@
       "when": 1785592206534,
       "tag": "0003_naive_elektra",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1785931670939,
+      "tag": "0004_nice_shotgun",
+      "breakpoints": true
     }
   ]
 }

@@ -1,0 +1,23 @@
+info:
+  name: request_verification
+  type: http
+  seq: 8
+
+http:
+  method: POST
+  url: http://localhost:3000/api/auth/request-verification
+  body:
+    type: json
+    data: |-
+      {
+        "phoneNo": "9876584331"
+      }
+  auth:
+    type: bearer
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsImlzVmVyaWZpZWQiOmZhbHNlLCJpYXQiOjE3ODU5NDM2OTIsImV4cCI6MTc4NTk0NTQ5Mn0.7-EDuHP0cpKN1evSsjn3jJBNsAtbojOR22sgAMAGQpc
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

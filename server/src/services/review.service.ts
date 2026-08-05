@@ -33,6 +33,10 @@ export const reviewServices = {
             throw new ApiError(400, "Cannot review other than seller")
         } 
 
+        if(existingOrder.orderStatus !== 'successful') {
+            throw new ApiError(400, `Cannnot review an ${existingOrder.orderStatus} order`)
+        }
+
         if(existingReview) {
             throw new ApiError(400, "Already reviewed")
         }
@@ -82,6 +86,7 @@ export const reviewServices = {
             .set({
                 avgSellerRating: Number(bayesianAvg.toFixed(2))
             })
+            .where(eq(users.userId, data.revieweeId))
         })
     },
 
@@ -111,6 +116,10 @@ export const reviewServices = {
         if(existingOrder.buyerId !== data.revieweeId) {
             throw new ApiError(400, "Cannot review other than buyer")
         } 
+
+        if(existingOrder.orderStatus !== 'successful') {
+            throw new ApiError(400, `Cannnot review an ${existingOrder.orderStatus} order`)
+        }
 
         if(existingReview) {
             throw new ApiError(400, "Already reviewed")
@@ -161,6 +170,7 @@ export const reviewServices = {
             .set({
                 avgBuyerRating: Number(bayesianAvg.toFixed(2))
             })
+            .where(eq(users.userId, data.revieweeId))
         })
     }
 }

@@ -1,14 +1,14 @@
 info:
   name: logout
   type: http
-  seq: 1
+  seq: 2
 
 http:
   method: POST
   url: http://localhost:3000/api/auth/logout
   auth:
     type: bearer
-    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlhdCI6MTc4NTY0ODc4OCwiZXhwIjoxNzg1NjUwNTg4fQ.tm6rbfYKcHgEuRF4zTIjDtMGRRrl_EavY7iorBp3DI8
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlzVmVyaWZpZWQiOnRydWUsImlhdCI6MTc4NTk0NDg4OCwiZXhwIjoxNzg1OTQ2Njg4fQ.-wGHDykwgl1LBchzH8CByp6Zyqpi6pZp4s22auk4bnk
 
 settings:
   encodeUrl: true

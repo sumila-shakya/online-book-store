@@ -166,7 +166,7 @@ export const authController = {
             .status(200)
             .json(new ApiResponse(200, "Please check your phone number to get otp"))
         } catch(error) {
-            next()
+            next(error)
         }
     },
 
@@ -182,13 +182,14 @@ export const authController = {
 
             const data: verifyPhoneNoType = verifyPhoneNoSchema.parse(req.body)
 
-            await authServices.verifyPhoneNo(userId, data)
+            const {refreshToken, accessToken} = await authServices.verifyPhoneNo(userId, data)
 
             res
             .status(200)
-            .json(new ApiResponse(200, "Your phone number is successfully verified"))
+            .cookie('refreshToken', refreshToken, COOKIES_OPTIONS)
+            .json(new ApiResponse(200, {accessToken},"Your phone number is successfully verified"))
         } catch(error) {
-            next()
+            next(error)
         }
     }
 }

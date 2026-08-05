@@ -1,11 +1,18 @@
 info:
-  name: confirm_seller
+  name: review_buyer
   type: http
-  seq: 4
+  seq: 1
 
 http:
   method: POST
-  url: http://localhost:3000/api/orders/1/seller-confirm
+  url: http://localhost:3000/api/orders/1/review-buyer
+  body:
+    type: json
+    data: |-
+      {
+        "revieweeId": 2,
+        "rating": 3
+      }
   auth:
     type: bearer
     token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlzVmVyaWZpZWQiOnRydWUsImlhdCI6MTc4NTk0NDg4OCwiZXhwIjoxNzg1OTQ2Njg4fQ.-wGHDykwgl1LBchzH8CByp6Zyqpi6pZp4s22auk4bnk
