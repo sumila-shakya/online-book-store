@@ -23,16 +23,16 @@ A C2C secondhand bookstore API. Students list books (auto-filled from the Google
 4. Refresh token is stored server-side (hashed, similar to OTP storage) against the user, so it can be invalidated later. Returned to the client — typically as an httpOnly cookie.
 ### Login (returning user)
 1. Same as register from the token-issuance.
-2. **Any previous refresh token for this user should be invalidated/overwritten**, not left active — prevents multiple simultaneously "valid" refresh tokens accumulating per user across repeated logins on different devices.
+2. **Any previous refresh token for this user should be invalidated**, not left active — prevents multiple simultaneously "valid" refresh tokens accumulating per user across repeated logins on different devices.
 ### Refresh (obtaining a new access token)
 1. Client sends the current refresh token (e.g. from httpOnly cookie) to `POST /auth/refresh`.
 2. Backend verifies the refresh token signature **and** checks it matches the hashed value stored server-side for that user (guards against a refresh token being valid by signature alone after it should've been revoked).
 3. On success:
    - Issue a **new** access token.
-   - **Rotate the refresh token** — issue a new refresh token too, and invalidate the old one immediately (delete/overwrite the stored hash). This is the "rotation" part: a refresh token is single-use, not reusable indefinitely.
+   - **Rotate the refresh token** — issue a new refresh token too, and invalidate the old one immediately (delete the stored hash). This is the "rotation" part: a refresh token is single-use, not reusable indefinitely.
 ### Verify Phone Number (OTP)
 1. `POST /auth/request-verification` — requires a valid access token (user must already be logged in). Does **not** issue or rotate any tokens — it only triggers OTP generation/send.
-2. `POST /auth/verify-otp` — on successful OTP match, updates `users.isVerified = true`. 
+2. `POST /auth/verify-phoneno` — on successful OTP match, updates `users.isVerified = true`. 
 
 ---
  
@@ -42,7 +42,7 @@ A C2C secondhand bookstore API. Students list books (auto-filled from the Google
 - **Canonical book deduplication** — one `books_catalogue` row per unique edition (matched by ISBN-13), with multiple `listings` rows (one per seller) referencing it. Prevents duplicate book metadata across many sellers listing the same title.
 - **ISBN-10 / ISBN-13 handling** — ISBN-13 stored as the canonical form; ISBN-10 converted or retried as a fallback query when the primary `isbn:` search misses (a known Google Books indexing inconsistency).
 - **Manual entry fallback** — if no ISBN, or ISBN not found via Google Books, seller enters title/author manually and uploads their own cover photo. `source: 'manual'`, `isbn: null`.
-- **Cover image handling** — extracted from Google's `imageLinks` object with a fallback chain (`thumbnail` → `smallThumbnail` → `small`), `http` upgraded to `https`, `null` if no image available at all.
+- **Cover image handling** — extracted from Google's `imageLinks` object with a fallback chain (`thumbnail` → `smallThumbnail` → `small`), `null` if no image available at all.
 - **Image storage** — seller-uploaded photos (condition photos, manual-entry covers) stored via Cloudinary.
 ## 4. Search
  
@@ -60,7 +60,7 @@ A C2C secondhand bookstore API. Students list books (auto-filled from the Google
 - **Bayesian weighted average rating** — `(C*m + ∑x)/(C+n)`, guarding new users against being unfairly ranked on too little data, and pulling toward the platform-wide average until enough reviews accumulate.
 - **Two-sided reviews** — buyers rate sellers, sellers rate buyers, one review per participant per completed order (`UNIQUE(order_id, reviewer_id)`).
 - **Incremental aggregate updates** — `rating_count`/`rating_sum` maintained as running totals on the `users` table rather than recomputed from the full `reviews` table on every read.
-- **Zero-review state handled explicitly** — `bayesian_rating` is `NULL` (not `0`) until a user's first review; frontend renders a "new user" state instead of a numeric score.
+- **Zero-review state handled explicitly** — `bayesian_rating` is `NULL` (not `0`) until a user's first review.
 
  
 ## 7. API Response Consistency
@@ -107,7 +107,7 @@ cp .env.example .env
 
 ### 3. Database setup
 
-Run migrations (however the project runs Drizzle migrations, e.g. `npm run db:migrate`), then **run this manually — it is not currently part of the migration files:**
+Run migrations (however the project runs Drizzle migrations, e.g. `npm run db:push`), then **run this manually — it is not currently part of the migration files:**
 
 ```sql
 CREATE FULLTEXT INDEX search_idx ON books_catalogue(title, author, description);
@@ -170,7 +170,7 @@ Some routes require `isVerified = true` on the user (enforced by the `requirePho
 
 ## Note
 
-- **Ratings can be `null`.** A user with zero reviews has `rating: null`, not `0`. Always check for `null` first in the UI and render a "New seller/buyer" state — don't treat `0` and `null` the same, they mean different things.
-- **ISBN can be `null` too.** Manually-entered listings (no ISBN found via Google Books) have `isbn: null`. Don't assume every book has one.
-- **Cover images can be missing.** `coverImageUrl` is nullable — show a placeholder image in the UI rather than a broken `<img>` tag.
+- **Ratings can be `null`.** A user with zero reviews has `rating: null`, not `0`.
+- **ISBN can be `null` too.** Manually-entered listings (no ISBN found via Google Books) have `isbn: null`.
+- **Cover images can be missing.** `coverImageUrl` is nullable
 - **Listing status matters for what actions are valid.** A listing can be `available`, `reserved`, or `sold`.

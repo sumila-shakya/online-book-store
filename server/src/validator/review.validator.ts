@@ -7,4 +7,5 @@ export const reviewSchema = z.object({
     .max(5, {message: 'rating cannot be greater than 5'})
 })
 
+/* --------------------------------- VALIDATION TYPES --------------------------------- */
 export type reviewType = z.infer<typeof reviewSchema>

@@ -30,6 +30,7 @@ export const googleCodeSchema = z.object({
     credential: z.string()
 })
 
+// REQUEST VERIFICATION SCHEMA
 export const requestVerificationSchema = z.object({
     phoneNo: z.string()
     .trim()
@@ -38,6 +39,7 @@ export const requestVerificationSchema = z.object({
     })
 })
 
+// OTP VERIFICATION SCHEMA
 export const verifyPhoneNoSchema = z.object({
     otp: z.string()
     .trim()

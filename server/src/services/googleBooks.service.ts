@@ -16,6 +16,7 @@ export const googleBookServices = {
         })
         const data: googleBookSearchResponseType = googleBooksSearchResponseSchema.parse(response.data)
 
+        // fallback options
         if(data.items.length === 0) {
             if(isbn.length === 13) {
                 const isbn10 = isbn.slice(3)

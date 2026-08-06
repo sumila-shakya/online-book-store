@@ -13,6 +13,7 @@ export const hashOTP = (data: string): string => {
     .digest('hex')
 }
 
+// simulate sending otp to the user phone number
 export const sendOtp = (phoneNo: string, otp: string): void => {
     console.log(`OTP: ${otp} send to phone no: ${phoneNo}`)
 }

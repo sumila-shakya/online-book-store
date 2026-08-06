@@ -8,9 +8,11 @@ router.post('/register', authController.registerUser)
 router.post('/login', authController.loginUser)
 router.post('/google', authController.signInWithGoogle)
 router.post('/logout', authMiddleware, authController.logout)
+
 router.post('/refresh', authController.refreshToken)
-router.post('/request-verification', authMiddleware, authController.requestVerification)
 router.get('/my-account',authMiddleware, authController.getAccount)
+
+router.post('/request-verification', authMiddleware, authController.requestVerification)
 router.post('/verify-phoneno', authMiddleware, authController.verifyPhoneNo)
 
 export default router
