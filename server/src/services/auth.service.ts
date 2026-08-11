@@ -7,7 +7,22 @@ import { jwtUtils } from "../utils/jwt";
 import { Payload } from "../@types/interface";
 import { verifyWithGoogle } from "./googleAuth.service";
 import { generateOTP, hashOTP, sendOtp } from "../utils/otp";
+import { RedisClient } from "../config/redis.config";
+import { MAX_AUTH_LIMIT, AUTH_WINDOW_FRAME, BLOCKED_TIME_PERIORD } from "../utils/constants";
 import bcrypt from 'bcrypt'
+
+const lua = `
+    local attempts = redis.call('INCR', KEYS[1])
+    if attempts == 1 then
+        redis.call('EXPIRE', KEYS[1], ARGV[1])
+    end
+    if attempts >= tonumber(ARGV[2]) then
+        redis.call('DEL', KEYS[1])
+        redis.call('SET', KEYS[2], "true", "EX", ARGV[3])
+        return -1
+    end
+    return attempts
+`
 
 export const authServices = {
     async registerUser(data: registrationType) {
@@ -84,6 +99,14 @@ export const authServices = {
             throw new ApiError(401, "Invalid credentials")
         }
 
+        const key = `failedLoginAttempts:${existingUser.email}`
+        const flag = `blocked:login:${existingUser.email}`
+
+        const isBlocked = await RedisClient.exists(flag)
+        if(isBlocked == 1) {
+            throw new ApiError(429, "Your account is temporarily blocked due to multiple failed login attempts. Please try again in 15 minutes.")
+        }
+
         // if the user has account using google throw error
         if(!existingUser.password && existingUser.authProvider == 'google') {
             throw new ApiError(400, "Please sign in using the google account")
@@ -94,6 +117,11 @@ export const authServices = {
 
         // if the password doesn't match throw error
         if(!isValidPassword) {
+            const result = await RedisClient.eval(lua, 2, key, flag, AUTH_WINDOW_FRAME, MAX_AUTH_LIMIT, BLOCKED_TIME_PERIORD) as number
+
+            if(result === -1) {
+                throw new ApiError(429, "Too many failed attempts. Please try again in 15 minutes!!")
+            }
             throw new ApiError(401, "Invalid credentials")
         }
 
@@ -122,6 +150,14 @@ export const authServices = {
         await db
         .insert(refreshTokens)
         .values(newToken)
+
+        const result = await RedisClient
+        .multi()
+        .del(key)
+        .del(flag)
+        .exec()
+
+        console.log(result)
 
         return {
             userId: existingUser.userId,
@@ -363,6 +399,14 @@ export const authServices = {
             .where((eq(otps.userId, userId)))
         ])
 
+        const key = `failedOTPAttempts:${user.email}`
+        const flag = `blocked:otp:${user.email}`
+
+        const isBlocked = await RedisClient.exists(flag)
+        if(isBlocked == 1) {
+            throw new ApiError(429, "This route is temporarily blocked due to multiple failed attempts. Please try again in 15 minutes.")
+        }
+
         if(user.isVerified) {
             throw new ApiError(400, "User already verified")
         }
@@ -383,6 +427,16 @@ export const authServices = {
         }
 
         if(tokenRecord.otpHash !== hashOTP(data.otp)) {
+            const result = await RedisClient.eval(lua, 2, key, flag, AUTH_WINDOW_FRAME, MAX_AUTH_LIMIT, BLOCKED_TIME_PERIORD) as number
+
+            if(result === -1) {
+                await db
+                .delete(otps)
+                .where(eq(otps.userId, tokenRecord.userId))
+
+                throw new ApiError(429, "Too many failed attempts. Please re request verification in 15 min!!")
+            }
+
             throw new ApiError(400, "Invalid OTP")
         }
 
@@ -396,7 +450,7 @@ export const authServices = {
             .where(eq(users.userId, userId)),
 
             // delete the otp
-            await db
+            await tx
             .delete(otps)
             .where(eq(otps.userId, tokenRecord.userId))
 
@@ -404,6 +458,12 @@ export const authServices = {
             .select()
             .from(users)
             .where(eq(users.userId, userId))
+
+            const result = await RedisClient
+            .multi()
+            .del(key)
+            .del(flag)
+            .exec()
 
             const payload: Payload = {
                 userId: userId,

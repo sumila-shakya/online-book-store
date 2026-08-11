@@ -15,7 +15,8 @@ declare global {
             GOOGLE_BOOKS_API_KEY: string,
             CLOUDINARY_CLOUD_NAME: string,
             CLOUDINARY_API_KEY: string,
-            CLOUDINARY_API_SECRET: string
+            CLOUDINARY_API_SECRET: string,
+            REDIS_URL: string
         }
     }
 }

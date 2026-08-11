@@ -1,6 +1,7 @@
 import express from 'express'
 import { ApiResponse } from './utils/apiResponse'
 import { errorHandler } from './middlewares/error.middleware'
+import { RedisClient } from './config/redis.config'
 import cookieParser from 'cookie-parser'
 import { db } from './config/mysql.config'
 import authRouter from './routes/auth.route'
@@ -39,6 +40,7 @@ app.get('/api/health', async (req, res, next) => {
         const healthData = {
             server: "UP",
             mysql: "Connected",
+            redis: RedisClient.status === 'ready' ? "Connected": "Disconnected",
             timestamp: new Date().toISOString()
         }
 

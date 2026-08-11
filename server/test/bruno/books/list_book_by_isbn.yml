@@ -10,13 +10,13 @@ http:
     type: json
     data: |-
       {
-        "isbn": "0307283658",
-        "price": 100.00,
+        "isbn": "9780007226498",
+        "price": 120.00,
         "bookCondition": "very_good"
       }
   auth:
     type: bearer
-    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlzVmVyaWZpZWQiOnRydWUsImlhdCI6MTc4NTk0MDEwMywiZXhwIjoxNzg1OTQxOTAzfQ.3NUgXsNNGkSgBQsIUkDDXZPjLbEx0TNRUBJwY3kNQaY
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlzVmVyaWZpZWQiOnRydWUsImlhdCI6MTc4NjQ0OTA3NSwiZXhwIjoxNzg2NDUwODc1fQ.WMbuya5uH7mdX0rikn4FWdkdqlp5x4NZ_A75nvy2V0c
 
 settings:
   encodeUrl: true
