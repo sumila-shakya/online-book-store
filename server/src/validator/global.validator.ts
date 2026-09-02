@@ -1,9 +1,9 @@
 import { z } from 'zod'
-import { DEFAULT_PAGE_LIMIT } from '../utils/constants'
+import { MAX_PAGE_LIMIT } from '../utils/constants'
 
 export const paginationSchema = z.object({
     page: z.coerce.number().positive().optional(),
-    limit: z.coerce.number().positive().max(DEFAULT_PAGE_LIMIT).optional(),
+    limit: z.coerce.number().positive().max(MAX_PAGE_LIMIT).optional(),
 })
 
 /* --------------------------------- VALIDATION TYPES --------------------------------- */

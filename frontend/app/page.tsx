@@ -1,69 +1,122 @@
 "use client";
 
+import React, { useState } from "react";
 import Link from "next/link";
-import { BookOpen, ShieldCheck, ArrowRight, Sparkles } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { BookOpen, Sparkles, ArrowRight, ShoppingBag, ShieldCheck } from "lucide-react";
 import { useAuth } from "../context/auth-context";
+import { useBooksQuery } from "../hooks/use-books";
+import { BookGrid } from "../components/books/book-grid";
+import { AuthRequiredDialog } from "../components/books/auth-required-dialog";
 import { Button } from "../components/ui/button";
-import { Badge } from "../components/ui/badge";
 
 export default function Home() {
-  const { user, isVerified } = useAuth();
+  const router = useRouter();
+  const { user } = useAuth();
+
+  const [authDialogOpen, setAuthDialogOpen] = useState(false);
+  const [targetRedirectUrl, setTargetRedirectUrl] = useState<string>("/login");
+
+  // Fetch only a preview list of books for landing page (limit: 6)
+  const { data, isLoading } = useBooksQuery({
+    page: 1,
+    limit: 6,
+  });
+
+  const handleBookClick = (listingId: number) => {
+    const targetUrl = `/books/${listingId}`;
+    if (!user) {
+      setTargetRedirectUrl(targetUrl);
+      setAuthDialogOpen(true);
+    } else {
+      router.push(targetUrl);
+    }
+  };
 
   return (
-    <main className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-      <div className="flex flex-col items-center text-center space-y-6">
-     
-
-        <h1 className="text-4xl font-extrabold tracking-tight sm:text-6xl text-slate-900 dark:text-slate-100 max-w-3xl">
-          Discover & Sell Books in a Secure Peer-to-Peer Marketplace
-        </h1>
-
-        <p className="max-w-2xl text-lg text-slate-600 dark:text-slate-400">
-          Connect directly with book sellers and buyers. Sign up, verify your mobile number, and start trading books effortlessly.
-        </p>
-
-        {user ? (
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-md dark:border-slate-800 dark:bg-slate-900 max-w-md w-full text-left space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 font-bold dark:bg-emerald-950 dark:text-emerald-300">
-                {user.name.charAt(0).toUpperCase()}
-              </div>
-              <div>
-                <h3 className="font-semibold text-slate-900 dark:text-slate-100">{user.name}</h3>
-                <p className="text-xs text-slate-500">{user.email}</p>
-              </div>
-            </div>
-
-            <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-              <span className="text-xs text-slate-500">Phone Status</span>
-              {isVerified ? (
-                <Badge variant="default" className="gap-1">
-                  <ShieldCheck className="h-3.5 w-3.5" /> Verified
-                </Badge>
-              ) : (
-                <Link href="/verify-phone">
-                  <Badge variant="destructive" className="gap-1 cursor-pointer">
-                    Unverified (Click to Verify)
-                  </Badge>
-                </Link>
-              )}
-            </div>
+    <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-12">
+      {/* Hero Banner Section */}
+      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-700 p-8 sm:p-14 text-white shadow-xl">
+        <div className="relative z-10 max-w-3xl space-y-6">
+          <div className="inline-flex items-center gap-2 rounded-full bg-white/10 backdrop-blur-md px-3.5 py-1 text-xs font-semibold text-emerald-100 border border-white/20">
+            <Sparkles className="h-3.5 w-3.5 text-amber-300" />
+            <span>Student Peer-to-Peer Book Exchange</span>
           </div>
-        ) : (
-          <div className="flex flex-wrap gap-4 justify-center">
-            <Link href="/register">
-              <Button size="lg" className="gap-2">
-                Get Started <ArrowRight className="h-4 w-4" />
+
+          <h1 className="text-3xl font-extrabold tracking-tight sm:text-5xl leading-tight">
+            Discover & Exchange Pre-loved Books Nearby
+          </h1>
+
+          <p className="text-base sm:text-lg text-emerald-50 max-w-2xl leading-relaxed">
+            Trade textbooks directly with fellow students. Browse verified listings, search by ISBN, and enjoy dual-confirmation order security.
+          </p>
+
+          <div className="flex flex-wrap items-center gap-4 pt-2">
+            <Link href="/search">
+              <Button size="lg" className="bg-white text-emerald-800 hover:bg-emerald-50 font-extrabold shadow-lg gap-2">
+                <span>Explore Book Marketplace</span>
+                <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
-            <Link href="/login">
-              <Button variant="outline" size="lg">
-                Sign In
-              </Button>
-            </Link>
+
+            {!user && (
+              <Link href="/register">
+                <Button variant="outline" size="lg" className="border-white/40 text-white hover:bg-white/10 font-bold">
+                  Create Account
+                </Button>
+              </Link>
+            )}
           </div>
-        )}
-      </div>
+        </div>
+
+        {/* Background Decorative Icon */}
+        <BookOpen className="absolute -right-8 -bottom-10 h-72 w-72 text-white/10 pointer-events-none rotate-12" />
+      </section>
+
+      {/* Featured Preview Listings Section */}
+      <section className="space-y-6">
+        <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
+          <div>
+            <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-2">
+              <ShoppingBag className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+              <span>Featured Book Listings</span>
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
+              Handpicked recent textbook additions from verified student sellers
+            </p>
+          </div>
+
+          <Link href="/search">
+            <Button variant="ghost" size="sm" className="hidden sm:flex items-center gap-1.5 font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700">
+              <span>View All Books</span>
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          </Link>
+        </div>
+
+        <BookGrid
+          listings={data?.listings || []}
+          isLoading={isLoading}
+          onBookClick={handleBookClick}
+        />
+
+        {/* View All Books CTA Button */}
+        <div className="flex justify-center pt-4">
+          <Link href="/search">
+            <Button size="lg" className="px-8 font-bold gap-2 shadow-md">
+              <span>View All Books in Catalog</span>
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          </Link>
+        </div>
+      </section>
+
+      {/* Auth Modal when unauthenticated user clicks a book */}
+      <AuthRequiredDialog
+        isOpen={authDialogOpen}
+        onClose={() => setAuthDialogOpen(false)}
+        redirectUrl={targetRedirectUrl}
+      />
     </main>
   );
 }

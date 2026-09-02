@@ -204,8 +204,9 @@ export const bookServices = {
                 queryFilters.push(eq(booksCatalogue.isbn, cleanedISBN))
             }
             else{
+                const searchTerm = `%${filters.q.trim()}%`
                 queryFilters.push(sql`
-                    MATCH(${booksCatalogue.title}, ${booksCatalogue.authors}, ${booksCatalogue.description}) AGAINST (${filters.q.trim()} IN NATURAL LANGUAGE MODE)
+                    (${booksCatalogue.title} LIKE ${searchTerm} OR ${booksCatalogue.authors} LIKE ${searchTerm} OR ${booksCatalogue.description} LIKE ${searchTerm})
                 `)
             }
         }
