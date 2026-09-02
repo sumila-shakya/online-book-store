@@ -1,6 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { Phone, KeyRound, CheckCircle2, AlertCircle } from "lucide-react";
 import { useAuth } from "../../context/auth-context";
 import {
@@ -10,6 +13,23 @@ import {
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
+
+const phoneSchema = z.object({
+  phoneNo: z
+    .string()
+    .min(7, "Please enter a valid phone number")
+    .regex(/^[0-9+\s-]{7,15}$/, "Invalid phone number format"),
+});
+
+const otpSchema = z.object({
+  otp: z
+    .string()
+    .min(4, "OTP code must be at least 4 digits")
+    .max(6, "OTP code cannot exceed 6 digits"),
+});
+
+type PhoneFormValues = z.infer<typeof phoneSchema>;
+type OtpFormValues = z.infer<typeof otpSchema>;
 
 interface VerifyPhoneFormProps {
   onSuccess?: () => void;
@@ -23,23 +43,26 @@ export function VerifyPhoneForm({ onSuccess }: VerifyPhoneFormProps) {
   const [step, setStep] = useState<"request" | "verify">(
     user?.phoneNo ? "verify" : "request"
   );
-  const [phoneNo, setPhoneNo] = useState(user?.phoneNo || "");
-  const [otp, setOtp] = useState("");
-  const [validationError, setValidationError] = useState<string | null>(null);
   const [infoMsg, setInfoMsg] = useState<string | null>(null);
 
-  const handleRequestOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setValidationError(null);
+  const phoneForm = useForm<PhoneFormValues>({
+    resolver: zodResolver(phoneSchema),
+    defaultValues: {
+      phoneNo: user?.phoneNo || "",
+    },
+  });
+
+  const otpForm = useForm<OtpFormValues>({
+    resolver: zodResolver(otpSchema),
+    defaultValues: {
+      otp: "",
+    },
+  });
+
+  const handleRequestOtp = (data: PhoneFormValues) => {
     setInfoMsg(null);
-
-    if (!phoneNo || phoneNo.length < 7) {
-      setValidationError("Please enter a valid phone number.");
-      return;
-    }
-
     requestMutation.mutate(
-      { phoneNo },
+      { phoneNo: data.phoneNo },
       {
         onSuccess: (res) => {
           setInfoMsg(
@@ -51,18 +74,11 @@ export function VerifyPhoneForm({ onSuccess }: VerifyPhoneFormProps) {
     );
   };
 
-  const handleVerifyOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setValidationError(null);
+  const handleVerifyOtp = (data: OtpFormValues) => {
     setInfoMsg(null);
-
-    if (!otp || otp.length < 4) {
-      setValidationError("Please enter the verification code.");
-      return;
-    }
-
+    const currentPhone = phoneForm.getValues("phoneNo") || user?.phoneNo || "";
     verifyMutation.mutate(
-      { phoneNo, otp },
+      { phoneNo: currentPhone, otp: data.otp },
       {
         onSuccess: () => {
           setInfoMsg("Phone number verified successfully!");
@@ -91,7 +107,6 @@ export function VerifyPhoneForm({ onSuccess }: VerifyPhoneFormProps) {
   }
 
   const activeError =
-    validationError ||
     (requestMutation.error as any)?.response?.data?.message ||
     (requestMutation.error as any)?.message ||
     (verifyMutation.error as any)?.response?.data?.message ||
@@ -115,7 +130,7 @@ export function VerifyPhoneForm({ onSuccess }: VerifyPhoneFormProps) {
       )}
 
       {step === "request" ? (
-        <form onSubmit={handleRequestOtp} className="space-y-4">
+        <form onSubmit={phoneForm.handleSubmit(handleRequestOtp)} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="phone">Phone Number</Label>
             <div className="relative">
@@ -125,9 +140,8 @@ export function VerifyPhoneForm({ onSuccess }: VerifyPhoneFormProps) {
                 type="tel"
                 placeholder="+977 98XXXXXXXX"
                 className="pl-10"
-                value={phoneNo}
-                onChange={(e) => setPhoneNo(e.target.value)}
-                required
+                error={phoneForm.formState.errors.phoneNo?.message}
+                {...phoneForm.register("phoneNo")}
               />
             </div>
             <p className="text-xs text-slate-500">
@@ -144,7 +158,7 @@ export function VerifyPhoneForm({ onSuccess }: VerifyPhoneFormProps) {
           </Button>
         </form>
       ) : (
-        <form onSubmit={handleVerifyOtp} className="space-y-4">
+        <form onSubmit={otpForm.handleSubmit(handleVerifyOtp)} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="otp">Enter OTP Code</Label>
             <div className="relative">
@@ -154,14 +168,12 @@ export function VerifyPhoneForm({ onSuccess }: VerifyPhoneFormProps) {
                 type="text"
                 placeholder="123456"
                 className="pl-10 tracking-widest font-mono text-lg"
-                value={otp}
-                onChange={(e) => setOtp(e.target.value)}
-                maxLength={6}
-                required
+                error={otpForm.formState.errors.otp?.message}
+                {...otpForm.register("otp")}
               />
             </div>
             <p className="text-xs text-slate-500">
-              Enter the OTP sent to <span className="font-semibold">{phoneNo}</span>.
+              Enter the OTP sent to <span className="font-semibold">{phoneForm.getValues("phoneNo") || user?.phoneNo}</span>.
             </p>
           </div>
 
@@ -188,3 +200,4 @@ export function VerifyPhoneForm({ onSuccess }: VerifyPhoneFormProps) {
     </div>
   );
 }
+

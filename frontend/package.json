@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@hookform/resolvers": "^5.9.1",
     "@tanstack/react-query": "^5.102.8",
     "axios": "^1.20.0",
     "class-variance-authority": "^0.7.1",
@@ -17,7 +18,9 @@
     "next": "16.3.4",
     "react": "19.2.8",
     "react-dom": "19.2.8",
-    "tailwind-merge": "^3.6.0"
+    "react-hook-form": "^7.87.0",
+    "tailwind-merge": "^3.6.0",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

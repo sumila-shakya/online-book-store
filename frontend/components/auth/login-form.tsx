@@ -3,42 +3,52 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Mail, Lock, BookOpen, AlertCircle } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { Mail, Lock, BookOpen, AlertCircle, Eye, EyeOff } from "lucide-react";
 import { useLoginMutation } from "../../hooks/use-auth";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
 
+const loginSchema = z.object({
+  email: z
+    .string()
+    .min(1, "Email address is required")
+    .email("Please enter a valid email address"),
+  password: z.string().min(1, "Password is required"),
+});
+
+type LoginFormValues = z.infer<typeof loginSchema>;
+
 export function LoginForm() {
   const router = useRouter();
   const loginMutation = useLoginMutation();
+  const [showPassword, setShowPassword] = useState(false);
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [validationError, setValidationError] = useState<string | null>(null);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setValidationError(null);
-
-    if (!email || !password) {
-      setValidationError("Please fill in all required fields.");
-      return;
-    }
-
-    loginMutation.mutate(
-      { email, password },
-      {
-        onSuccess: () => {
-          router.push("/");
-        },
-      }
-    );
+  const onSubmit = (data: LoginFormValues) => {
+    loginMutation.mutate(data, {
+      onSuccess: () => {
+        router.push("/");
+      },
+    });
   };
 
-  const errorMessage =
-    validationError ||
+  const apiErrorMessage =
     (loginMutation.error as any)?.response?.data?.message ||
     (loginMutation.error as any)?.message ||
     null;
@@ -56,14 +66,14 @@ export function LoginForm() {
       </CardHeader>
 
       <CardContent>
-        {errorMessage && (
+        {apiErrorMessage && (
           <div className="mb-6 flex items-start gap-3 rounded-lg border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800 dark:border-rose-900/50 dark:bg-rose-950/40 dark:text-rose-300">
             <AlertCircle className="h-5 w-5 shrink-0 text-rose-600 dark:text-rose-400" />
-            <p>{errorMessage}</p>
+            <p>{apiErrorMessage}</p>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
           <div className="space-y-2">
             <Label htmlFor="email">Email Address</Label>
             <div className="relative">
@@ -73,9 +83,8 @@ export function LoginForm() {
                 type="email"
                 placeholder="you@example.com"
                 className="pl-10"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
+                error={errors.email?.message}
+                {...register("email")}
               />
             </div>
           </div>
@@ -88,13 +97,21 @@ export function LoginForm() {
               <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
               <Input
                 id="password"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 placeholder="••••••••"
-                className="pl-10"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
+                className="pl-10 pr-10"
+                error={errors.password?.message}
+                {...register("password")}
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                className="absolute right-3 top-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors focus:outline-none"
+                tabIndex={-1}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
             </div>
           </div>
 
@@ -121,3 +138,4 @@ export function LoginForm() {
     </Card>
   );
 }
+
