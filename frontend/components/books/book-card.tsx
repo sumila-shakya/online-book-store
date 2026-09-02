@@ -12,12 +12,19 @@ interface BookCardProps {
 }
 
 const conditionBadgeStyles: Record<BookCondition, string> = {
-  "As New": "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800",
-  "Fine": "bg-teal-100 text-teal-800 dark:bg-teal-950/60 dark:text-teal-300 border-teal-200 dark:border-teal-800",
-  "Very Good": "bg-sky-100 text-sky-800 dark:bg-sky-950/60 dark:text-sky-300 border-sky-200 dark:border-sky-800",
-  "Good": "bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border-amber-200 dark:border-amber-800",
-  "Fair": "bg-orange-100 text-orange-800 dark:bg-orange-950/60 dark:text-orange-300 border-orange-200 dark:border-orange-800",
-  "Poor": "bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 border-rose-200 dark:border-rose-800",
+  like_new: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800",
+  very_good: "bg-teal-100 text-teal-800 dark:bg-teal-950/60 dark:text-teal-300 border-teal-200 dark:border-teal-800",
+  good: "bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border-amber-200 dark:border-amber-800",
+  fair: "bg-orange-100 text-orange-800 dark:bg-orange-950/60 dark:text-orange-300 border-orange-200 dark:border-orange-800",
+  poor: "bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 border-rose-200 dark:border-rose-800",
+};
+
+const conditionLabels: Record<BookCondition, string> = {
+  like_new: "Like New",
+  very_good: "Very Good",
+  good: "Good",
+  fair: "Fair",
+  poor: "Poor",
 };
 
 export function BookCard({ listing, onClick }: BookCardProps) {
@@ -56,11 +63,11 @@ export function BookCard({ listing, onClick }: BookCardProps) {
         <div className="absolute top-3 left-3">
           <Badge
             variant="outline"
-            className={`text-xs font-semibold px-2.5 py-0.5 rounded-full shadow-xs border ${
+            className={`text-xs font-semibold px-2.5 py-0.5 rounded-full shadow-xs border capitalize ${
               conditionBadgeStyles[listing.bookCondition] || "bg-slate-100 text-slate-800"
             }`}
           >
-            {listing.bookCondition}
+            {conditionLabels[listing.bookCondition] || listing.bookCondition}
           </Badge>
         </div>
       </div>

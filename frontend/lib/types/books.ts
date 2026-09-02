@@ -1,4 +1,4 @@
-export type BookCondition = 'As New' | 'Fine' | 'Very Good' | 'Good' | 'Fair' | 'Poor';
+export type BookCondition = 'like_new' | 'very_good' | 'good' | 'fair' | 'poor';
 export type ListingStatus = 'available' | 'reserved' | 'sold';
 
 export interface BookListingSummary {
