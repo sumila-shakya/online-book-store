@@ -2,7 +2,7 @@
 
 import React from "react";
 import Image from "next/image";
-import { BookOpen, Star, UserCheck, Tag } from "lucide-react";
+import { BookOpen, Star, UserCheck, Tag, Clock } from "lucide-react";
 import { BookListingSummary, BookCondition } from "../../lib/types/books";
 import { Badge } from "../ui/badge";
 
@@ -59,8 +59,8 @@ export function BookCard({ listing, onClick }: BookCardProps) {
           </div>
         )}
 
-        {/* Condition Badge */}
-        <div className="absolute top-3 left-3">
+        {/* Condition & Reserved Status Badges */}
+        <div className="absolute top-3 left-3 right-3 flex items-center justify-between pointer-events-none">
           <Badge
             variant="outline"
             className={`text-xs font-semibold px-2.5 py-0.5 rounded-full shadow-xs border capitalize ${
@@ -69,6 +69,15 @@ export function BookCard({ listing, onClick }: BookCardProps) {
           >
             {conditionLabels[listing.bookCondition] || listing.bookCondition}
           </Badge>
+
+          {listing.listingStatus === "reserved" && (
+            <Badge
+              className="bg-amber-500 text-white font-extrabold text-[11px] px-2.5 py-0.5 rounded-full shadow-md uppercase tracking-wider animate-pulse flex items-center gap-1 border-amber-600"
+            >
+              <Clock className="h-3 w-3" />
+              <span>Reserved</span>
+            </Badge>
+          )}
         </div>
       </div>
 

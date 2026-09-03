@@ -17,9 +17,13 @@ import {
   FileText,
   Bookmark,
   CheckCircle2,
+  Loader2,
+  AlertCircle,
+  Clock,
 } from "lucide-react";
 import { useAuth } from "../../../context/auth-context";
 import { useBookDetailQuery } from "../../../hooks/use-books";
+import { usePlaceOrderMutation } from "../../../hooks/use-orders";
 import { AuthRequiredDialog } from "../../../components/books/auth-required-dialog";
 import { Button } from "../../../components/ui/button";
 import { Badge } from "../../../components/ui/badge";
@@ -38,6 +42,8 @@ export default function BookDetailPage({ params }: BookDetailPageProps) {
 
   // Enable query if user is logged in
   const { data: bookDetail, isLoading, error } = useBookDetailQuery(listingId, !!user);
+  const placeOrderMutation = usePlaceOrderMutation();
+  const [orderError, setOrderError] = useState<string | null>(null);
 
   // If auth finished loading and user is not logged in, trigger modal
   React.useEffect(() => {
@@ -45,6 +51,32 @@ export default function BookDetailPage({ params }: BookDetailPageProps) {
       setAuthDialogOpen(true);
     }
   }, [authLoading, user]);
+
+  const handlePlaceOrder = async () => {
+    setOrderError(null);
+
+    if (!user) {
+      setAuthDialogOpen(true);
+      return;
+    }
+
+    if (!user.isVerified) {
+      router.push(`/verify-phone?redirect=/books/${listingId}`);
+      return;
+    }
+
+    try {
+      const result = await placeOrderMutation.mutateAsync(listingId);
+      if (result && result.orderId) {
+        router.push(`/orders/${result.orderId}`);
+      } else {
+        router.push("/orders");
+      }
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || err?.message || "Failed to place order.";
+      setOrderError(msg);
+    }
+  };
 
   const formattedPrice = bookDetail
     ? new Intl.NumberFormat("ne-NP", {
@@ -270,11 +302,48 @@ export default function BookDetailPage({ params }: BookDetailPageProps) {
             </div>
 
             {/* Action CTAs */}
-            <div className="pt-4">
-              <Button size="lg" className="w-full text-base font-bold shadow-lg gap-2">
-                <Bookmark className="h-5 w-5" />
-                <span>Place Order / Reserve Book</span>
-              </Button>
+            <div className="pt-4 space-y-3">
+              {orderError && (
+                <div className="flex items-center gap-2 rounded-2xl bg-rose-50 border border-rose-200 p-4 text-xs font-semibold text-rose-700 dark:bg-rose-950/40 dark:border-rose-900/50 dark:text-rose-300">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
+                  <span>{orderError}</span>
+                </div>
+              )}
+
+              {user && user.userId === bookDetail.sellerInfo.sellerId ? (
+                <div className="rounded-2xl bg-slate-100 dark:bg-slate-800/80 p-4 text-center text-sm font-semibold text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
+                  You are the seller of this listing. You cannot order your own book.
+                </div>
+              ) : bookDetail.listingStatus !== "available" ? (
+                <div className="space-y-2">
+                  <div className="rounded-2xl bg-amber-50 border border-amber-200 p-4 dark:bg-amber-950/40 dark:border-amber-900/50 text-xs font-semibold text-amber-800 dark:text-amber-300">
+                    This book is currently reserved while buyer & seller complete the transaction.
+                  </div>
+                  <Button size="lg" disabled className="w-full text-base font-bold gap-2">
+                    <Clock className="h-5 w-5" />
+                    <span className="capitalize">Book {bookDetail.listingStatus}</span>
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  size="lg"
+                  onClick={handlePlaceOrder}
+                  disabled={placeOrderMutation.isPending}
+                  className="w-full text-base font-bold shadow-lg gap-2 bg-emerald-600 hover:bg-emerald-700 text-white"
+                >
+                  {placeOrderMutation.isPending ? (
+                    <>
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      <span>Reserving Book...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Bookmark className="h-5 w-5" />
+                      <span>Place Order / Reserve Book</span>
+                    </>
+                  )}
+                </Button>
+              )}
             </div>
           </div>
         </div>

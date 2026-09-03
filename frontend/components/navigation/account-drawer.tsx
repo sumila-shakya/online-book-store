@@ -12,6 +12,7 @@ import {
   PlusCircle,
   BookOpen,
   ChevronRight,
+  Loader2,
 } from "lucide-react";
 import { useAuth } from "../../context/auth-context";
 import { useLogoutMutation } from "../../hooks/use-auth";
@@ -146,12 +147,24 @@ export function AccountDrawer({
               </Link>
 
               <Link
+                href="/orders"
+                onClick={onClose}
+                className="flex items-center justify-between p-3.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-slate-700 dark:text-slate-300 font-medium text-sm"
+              >
+                <div className="flex items-center gap-3">
+                  <ShoppingBag className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                  <span className="font-bold text-slate-900 dark:text-slate-100">My Orders Hub</span>
+                </div>
+                <ChevronRight className="h-4 w-4 text-slate-400" />
+              </Link>
+
+              <Link
                 href="/seller/my-listings"
                 onClick={onClose}
                 className="flex items-center justify-between p-3.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-slate-700 dark:text-slate-300 font-medium text-sm"
               >
                 <div className="flex items-center gap-3">
-                  <ShoppingBag className="h-5 w-5 text-slate-400" />
+                  <BookOpen className="h-5 w-5 text-slate-400" />
                   <span>My Book Listings</span>
                 </div>
                 <ChevronRight className="h-4 w-4 text-slate-400" />
@@ -174,16 +187,19 @@ export function AccountDrawer({
           </div>
 
           {/* Footer / Logout */}
-          <div className="p-6 border-t border-slate-100 dark:border-slate-800">
-            <Button
-              variant="outline"
+          <div className="p-6 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40">
+            <button
               onClick={handleLogout}
-              isLoading={logoutMutation.isPending}
-              className="w-full flex items-center justify-center gap-2 text-rose-600 border-rose-200 hover:bg-rose-50 dark:text-rose-400 dark:border-rose-900/50 dark:hover:bg-rose-950/40"
+              disabled={logoutMutation.isPending}
+              className="w-full flex items-center justify-center gap-2.5 py-3 px-4 rounded-xl font-bold text-sm bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200/80 dark:bg-rose-950/40 dark:hover:bg-rose-900/60 dark:text-rose-300 dark:border-rose-900/60 shadow-xs hover:shadow-md transition-all active:scale-[0.98] cursor-pointer disabled:opacity-50"
             >
-              <LogOut className="h-4 w-4" />
+              {logoutMutation.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <LogOut className="h-4 w-4" />
+              )}
               <span>Sign Out Account</span>
-            </Button>
+            </button>
           </div>
 
         </div>

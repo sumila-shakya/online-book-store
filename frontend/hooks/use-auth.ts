@@ -73,8 +73,10 @@ export function useLogoutMutation() {
     onSettled: () => {
       setAccessTokenState(null);
       setAccessToken(null);
-      queryClient.setQueryData(authKeys.account, null);
-      queryClient.invalidateQueries({ queryKey: authKeys.account });
+      queryClient.clear();
+      if (typeof window !== "undefined") {
+        window.location.href = "/";
+      }
     },
   });
 }

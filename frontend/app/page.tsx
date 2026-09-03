@@ -3,7 +3,13 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { BookOpen, Sparkles, ArrowRight, ShoppingBag, ShieldCheck } from "lucide-react";
+import {
+  BookOpen,
+  Sparkles,
+  ArrowRight,
+  ShoppingBag,
+  ShieldCheck,
+} from "lucide-react";
 import { useAuth } from "../context/auth-context";
 import { useBooksQuery } from "../hooks/use-books";
 import { BookGrid } from "../components/books/book-grid";
@@ -48,12 +54,17 @@ export default function Home() {
           </h1>
 
           <p className="text-base sm:text-lg text-emerald-50 max-w-2xl leading-relaxed">
-            Trade textbooks directly with fellow students. Browse verified listings, search by ISBN, and enjoy dual-confirmation order security.
+            Trade textbooks directly with fellow students. Browse verified
+            listings, search by ISBN, and enjoy dual-confirmation order
+            security.
           </p>
 
           <div className="flex flex-wrap items-center gap-4 pt-2">
             <Link href="/search">
-              <Button size="lg" className="bg-white text-emerald-800 hover:bg-emerald-50 font-extrabold shadow-lg gap-2">
+              <Button
+                size="lg"
+                className="bg-emerald-700! text-white-800 hover:bg-emerald-800! font-extrabold shadow-lg gap-2"
+              >
                 <span>Explore Book Marketplace</span>
                 <ArrowRight className="h-4 w-4" />
               </Button>
@@ -61,7 +72,10 @@ export default function Home() {
 
             {!user && (
               <Link href="/register">
-                <Button variant="outline" size="lg" className="border-white/40 text-white hover:bg-white/10 font-bold">
+                <Button
+                  size="lg"
+                  className="text-white! bg-emerald-700! hover:bg-emerald-800! font-bold"
+                >
                   Create Account
                 </Button>
               </Link>
@@ -87,7 +101,11 @@ export default function Home() {
           </div>
 
           <Link href="/search">
-            <Button variant="ghost" size="sm" className="hidden sm:flex items-center gap-1.5 font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="hidden sm:flex items-center gap-1.5 font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700"
+            >
               <span>View All Books</span>
               <ArrowRight className="h-4 w-4" />
             </Button>

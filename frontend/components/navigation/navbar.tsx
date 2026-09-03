@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { BookOpen, User, ShieldAlert } from "lucide-react";
+import { BookOpen, User, ShieldAlert, ShoppingBag } from "lucide-react";
 import { useAuth } from "../../context/auth-context";
 import { useSearch } from "../../context/search-context";
 import { Button } from "../ui/button";
@@ -62,6 +62,13 @@ export function Navbar() {
               <div className="h-9 w-9 animate-pulse rounded-full bg-slate-200 dark:bg-slate-800" />
             ) : user ? (
               <div className="flex items-center gap-2">
+                <Link href="/orders">
+                  <Button variant="ghost" size="sm" className="hidden sm:flex items-center gap-1.5 font-semibold text-slate-700 dark:text-slate-200">
+                    <ShoppingBag className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                    <span>Orders</span>
+                  </Button>
+                </Link>
+
                 {/* Circular Account Icon Button */}
                 <button
                   type="button"
