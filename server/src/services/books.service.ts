@@ -1,6 +1,6 @@
 import { db } from "../config/mysql.config";
 import { booksListings, booksCatalogue, users, NewBook, NewListing, Listing } from "../models/mysql.model";
-import { eq, count, and, sql, desc, asc } from "drizzle-orm";
+import { eq, count, and, sql, desc, asc, inArray } from "drizzle-orm";
 import { ApiError } from "../utils/apiError"
 import { bookListingByIsbnType, bookFilterType } from "../validator/books.validator";
 import { googleBookServices } from "./googleBooks.service";
@@ -196,7 +196,7 @@ export const bookServices = {
         const limit = filters.limit || DEFAULT_PAGE_LIMIT
         const offset = (page - 1)*limit
         
-        const queryFilters = [eq(booksListings.listingStatus, 'available')]
+        const queryFilters = [inArray(booksListings.listingStatus, ['available', 'reserved'])]
 
         if(filters.q) {
             if(parseISBN(filters.q.trim())) {
