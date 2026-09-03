@@ -59,4 +59,12 @@ export const authApi = {
     );
     return res.data;
   },
+
+  async googleSignIn(credential: string) {
+    const res = await apiClient.post<ApiResponse<AuthResponseData>>(
+      "/auth/google",
+      { credential }
+    );
+    return res.data;
+  },
 };

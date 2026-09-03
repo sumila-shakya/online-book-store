@@ -105,3 +105,20 @@ export function useVerifyPhoneMutation() {
     },
   });
 }
+
+// TanStack Mutation: Google Auth Sign In
+export function useGoogleAuthMutation() {
+  const queryClient = useQueryClient();
+  const { setAccessTokenState } = useAuth();
+
+  return useMutation({
+    mutationFn: (credential: string) => authApi.googleSignIn(credential),
+    onSuccess: (res) => {
+      if (res.success && res.data?.accessToken) {
+        setAccessTokenState(res.data.accessToken);
+        setAccessToken(res.data.accessToken);
+        queryClient.invalidateQueries({ queryKey: authKeys.account });
+      }
+    },
+  });
+}

@@ -12,6 +12,7 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
+import { GoogleSignInButton } from "./google-sign-in-button";
 
 const registerSchema = z
   .object({
@@ -86,6 +87,18 @@ export function RegisterForm() {
             <p>{apiErrorMessage}</p>
           </div>
         )}
+
+        {/* Google Sign In Option */}
+        <div className="space-y-4 mb-6">
+          <GoogleSignInButton onSuccessRedirect="/" />
+
+          <div className="relative flex items-center justify-center">
+            <div className="w-full border-t border-slate-200 dark:border-slate-800" />
+            <span className="absolute bg-white dark:bg-slate-900 px-3 text-xs font-semibold uppercase text-slate-400">
+              Or sign up with email
+            </span>
+          </div>
+        </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
