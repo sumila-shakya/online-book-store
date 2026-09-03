@@ -226,7 +226,7 @@ export const ordersServices = {
                 title: booksCatalogue.title,
                 imageUrl: booksCatalogue.imageUrl,
                 price: booksListings.price,
-                buyerId: orders.sellerId,
+                buyerId: orders.buyerId,
                 buyerName: users.name,
                 buyerRating: users.avgBuyerRating
             })
@@ -270,23 +270,26 @@ export const ordersServices = {
             throw new ApiError(404, "Order not found")
         }
 
-        if(userId !== existingOrder.buyerId && userId !== existingOrder.sellerId) {
+        const isBuyerUser = Number(userId) === Number(existingOrder.buyerId);
+        const isSellerUser = Number(userId) === Number(existingOrder.sellerId);
+
+        if(!isBuyerUser && !isSellerUser) {
             throw new ApiError(403, "Access Denied")
         }
 
-        const joinCondition: SQL = userId === existingOrder.buyerId ? eq(users.userId, orders.sellerId) : eq(users.userId, orders.buyerId)
+        const joinCondition: SQL = isBuyerUser ? eq(users.userId, orders.sellerId) : eq(users.userId, orders.buyerId)
 
         const [orderDetails] = await db
         .select({
             orderId: orders.orderId,
             orderedAt: orders.orderedAt,
             orderStatus: orders.orderStatus,
-            myConfirmation: userId === existingOrder.buyerId ? orders.buyerVerifiedAt : orders.sellerVerifiedAt,
-            counterPartyConfirmation: userId === existingOrder.buyerId ? orders.sellerVerifiedAt : orders.buyerVerifiedAt,
+            myConfirmation: isBuyerUser ? orders.buyerVerifiedAt : orders.sellerVerifiedAt,
+            counterPartyConfirmation: isBuyerUser ? orders.sellerVerifiedAt : orders.buyerVerifiedAt,
             counterParty: {
                 userId: users.userId,
                 name: users.name,
-                userRating: userId === existingOrder.buyerId ? users.avgSellerRating : users.avgBuyerRating,
+                userRating: isBuyerUser ? users.avgSellerRating : users.avgBuyerRating,
                 phoneNo: users.phoneNo,
                 isverified: users.isVerified
             },
@@ -305,7 +308,7 @@ export const ordersServices = {
         .where(eq(orders.orderId, orderId))
 
         return {
-            userRole: userId === existingOrder.buyerId ? 'buyer' : 'seller',
+            userRole: isBuyerUser ? 'buyer' : 'seller',
             ...orderDetails
         }
     },

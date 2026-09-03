@@ -1,10 +1,10 @@
 import { z } from 'zod'
-import { ORDER_STATUS, DEFAULT_PAGE_LIMIT } from '../utils/constants'
+import { ORDER_STATUS, MAX_PAGE_LIMIT } from '../utils/constants'
 
 export const orderFilterSchema = z.object({
     orderStatus: z.enum(ORDER_STATUS, {message: "Invalid Status"}).optional(),
     page: z.coerce.number().positive().optional(),
-    limit: z.coerce.number().positive().max(DEFAULT_PAGE_LIMIT).optional(),
+    limit: z.coerce.number().positive().max(MAX_PAGE_LIMIT).optional(),
 })
 
 /* --------------------------------- VALIDATION TYPES --------------------------------- */

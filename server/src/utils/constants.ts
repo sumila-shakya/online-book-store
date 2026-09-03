@@ -1,4 +1,5 @@
 export const DEFAULT_PAGE_LIMIT = 5
+export const MAX_PAGE_LIMIT = 50
 export const THRESHOLD_FREQUENCY = 10
 export const GRACE_PERIOD = 15
 export const MAX_SERVICE_LIMIT = 10

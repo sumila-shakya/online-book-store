@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { BOOK_CONDITION, DEFAULT_PAGE_LIMIT } from '../utils/constants'
+import { BOOK_CONDITION, DEFAULT_PAGE_LIMIT, MAX_PAGE_LIMIT } from '../utils/constants'
 
 export const bookListingByIsbnSchema = z.object({
     isbn: z.string()
@@ -20,7 +20,7 @@ export const bookListingManuallySchema = z.object({
 export const bookFilterSchema = z.object({
     q: z.string().optional(),
     page: z.coerce.number().positive().optional(),
-    limit: z.coerce.number().positive().max(DEFAULT_PAGE_LIMIT).optional(),
+    limit: z.coerce.number().positive().max(MAX_PAGE_LIMIT).optional(),
 })
 
 /* --------------------------------- VALIDATION TYPES --------------------------------- */

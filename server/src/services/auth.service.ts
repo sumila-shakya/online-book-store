@@ -282,10 +282,10 @@ export const authServices = {
         // delete the old token
         await db
         .delete(refreshTokens)
-        .where(eq(refreshTokens.userId, existingUser.userId))
+        .where(eq(refreshTokens.userId, userId))
 
         const newToken: NewToken = {
-            userId: existingUser.userId,
+            userId: userId,
             token: refreshToken,
             expiresAt: expiryDate
         }
