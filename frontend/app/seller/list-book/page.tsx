@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -15,6 +15,8 @@ import {
   CheckCircle2,
   ShieldAlert,
   Sparkles,
+  X,
+  ImageIcon,
 } from "lucide-react";
 import { useAuth } from "../../../context/auth-context";
 import { useListByIsbnMutation, useListManuallyMutation } from "../../../hooks/use-seller";
@@ -70,10 +72,13 @@ export default function ListBookPage() {
   const router = useRouter();
   const { user, isVerified, isLoading: authLoading } = useAuth();
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [activeTab, setActiveTab] = useState<"isbn" | "manual">("isbn");
   const [showVerifyModal, setShowVerifyModal] = useState(false);
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [imageError, setImageError] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
@@ -102,12 +107,72 @@ export default function ListBookPage() {
     },
   });
 
+  const processFile = (file: File) => {
+    setImageError(null);
+
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/jpg"];
+    if (!allowedTypes.includes(file.type)) {
+      setImageError("Please upload a valid image file (JPG, PNG, or WEBP).");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setImageError("File size exceeds 5MB limit. Please choose a smaller image.");
+      return;
+    }
+
+    if (coverPreview) {
+      URL.revokeObjectURL(coverPreview);
+    }
+
+    setCoverFile(file);
+    setCoverPreview(URL.createObjectURL(file));
+  };
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setCoverFile(file);
-      setCoverPreview(URL.createObjectURL(file));
+      processFile(file);
     }
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      processFile(file);
+    }
+  };
+
+  const removeCoverImage = () => {
+    if (coverPreview) {
+      URL.revokeObjectURL(coverPreview);
+    }
+    setCoverFile(null);
+    setCoverPreview(null);
+    setImageError(null);
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024 * 1024) {
+      return `${(bytes / 1024).toFixed(1)} KB`;
+    }
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
   const onIsbnSubmit = (data: IsbnFormValues) => {
@@ -368,37 +433,108 @@ export default function ListBookPage() {
               {/* Cover Image Upload */}
               <div className="space-y-2">
                 <Label>Cover Photo (Optional)</Label>
-                <div className="flex flex-col sm:flex-row items-center gap-4">
-                  <div className="relative h-32 w-24 shrink-0 overflow-hidden rounded-xl border border-dashed border-slate-300 bg-slate-50 dark:border-slate-700 dark:bg-slate-800 flex items-center justify-center text-slate-400">
-                    {coverPreview ? (
-                      <img
-                        src={coverPreview}
-                        alt="Cover Preview"
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <Upload className="h-6 w-6" />
-                    )}
-                  </div>
+                <div
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                  className={`relative rounded-2xl border-2 border-dashed p-4 transition-all ${
+                    isDragging
+                      ? "border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20"
+                      : "border-slate-200 hover:border-slate-300 dark:border-slate-800 dark:hover:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50"
+                  }`}
+                >
+                  {coverPreview && coverFile ? (
+                    <div className="flex flex-col sm:flex-row items-center gap-4">
+                      <div className="relative h-36 w-28 shrink-0 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs">
+                        <img
+                          src={coverPreview}
+                          alt="Cover Preview"
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
+                      <div className="flex-1 space-y-1 text-center sm:text-left">
+                        <div className="flex items-center justify-center sm:justify-start gap-2">
+                          <ImageIcon className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                          <p className="text-sm font-semibold text-slate-800 dark:text-slate-200 truncate max-w-xs">
+                            {coverFile.name}
+                          </p>
+                        </div>
+                        <p className="text-xs text-slate-500">
+                          {formatFileSize(coverFile.size)} • Ready for upload
+                        </p>
+                        <div className="pt-2 flex items-center justify-center sm:justify-start gap-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => fileInputRef.current?.click()}
+                            className="cursor-pointer text-xs"
+                          >
+                            Change Image
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={removeCoverImage}
+                            className="text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/30"
+                          >
+                            <X className="h-3.5 w-3.5 mr-1" />
+                            Remove
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div
+                      onClick={() => fileInputRef.current?.click()}
+                      className="flex flex-col items-center justify-center py-6 text-center cursor-pointer group"
+                    >
+                      <div className="h-12 w-12 rounded-full bg-emerald-100 dark:bg-emerald-950/50 flex items-center justify-center text-emerald-600 dark:text-emerald-400 mb-3 group-hover:scale-105 transition-transform">
+                        <Upload className="h-6 w-6" />
+                      </div>
+                      <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+                        Drag and drop book cover photo here
+                      </p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                        Or click anywhere in this box to browse from your device
+                      </p>
+                      <div className="mt-3">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            fileInputRef.current?.click();
+                          }}
+                          className="cursor-pointer font-medium"
+                        >
+                          Choose Cover Image
+                        </Button>
+                      </div>
+                      <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-2">
+                        PNG, JPG, or WEBP up to 5MB
+                      </p>
+                    </div>
+                  )}
 
-                  <div className="space-y-2 text-center sm:text-left">
-                    <input
-                      type="file"
-                      id="cover-upload"
-                      accept="image/*"
-                      onChange={handleImageChange}
-                      className="hidden"
-                    />
-                    <label htmlFor="cover-upload">
-                      <Button type="button" variant="outline" size="sm" className="cursor-pointer">
-                        Choose Image File
-                      </Button>
-                    </label>
-                    <p className="text-xs text-slate-500">
-                      Supports PNG, JPG, or WEBP images up to 5MB.
-                    </p>
-                  </div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    id="cover-upload"
+                    accept="image/jpeg,image/png,image/webp,image/jpg"
+                    onChange={handleImageChange}
+                    className="hidden"
+                  />
                 </div>
+
+                {imageError && (
+                  <p className="text-xs font-semibold text-rose-500 mt-1 flex items-center gap-1">
+                    <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                    <span>{imageError}</span>
+                  </p>
+                )}
               </div>
 
               <div className="space-y-4">
