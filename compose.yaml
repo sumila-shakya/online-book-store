@@ -1,0 +1,48 @@
+services:
+  api:
+    image: book_store_api
+    build:
+      context: ./server
+      target: dev
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./server/.env
+    environment:
+      DB_HOST: mysql
+      REDIS_URL: redis://redis:6379
+    volumes:
+      - ./server:/app             
+      - /app/node_modules        
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}     
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$$MYSQL_ROOT_PASSWORD"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:alpine
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  mysql_data:
+  redis_data:
